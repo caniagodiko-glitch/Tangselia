@@ -1,0 +1,41 @@
+<?php
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Google Gemini API
+    |--------------------------------------------------------------------------
+    |
+    | Kunci API diambil dari environment variable GEMINI_API_KEY dan tidak
+    | pernah disimpan di basis data. Bila kosong, seluruh perangkuman
+    | otomatis memakai ringkasan bawaan feed (diringkas_oleh = feed).
+    |
+    */
+
+    'key' => env('GEMINI_API_KEY'),
+
+    'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
+
+    'endpoint' => 'https://generativelanguage.googleapis.com/v1beta/models/',
+
+    'temperature' => 0.3,
+
+    'max_output_tokens' => 300,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Prompt Perangkuman
+    |--------------------------------------------------------------------------
+    |
+    | Placeholder :judul dan :isi digantikan oleh AISummarizer. Prompt
+    | berbahasa Indonesia sesuai kebutuhan portal berita lokal.
+    |
+    */
+
+    'prompt' => 'Anda adalah penyunting berita lokal Kota Tangerang Selatan. '
+        ."Ringkas artikel berikut dalam Bahasa Indonesia yang netral, 2\u20133 kalimat "
+        .'(maksimal 60 kata), fakta utama saja, tanpa opini, tanpa salam atau penutup. '
+        ."\n\nJudul: :judul\n\nIsi artikel:\n:isi",
+
+];

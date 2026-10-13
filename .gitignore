@@ -1,0 +1,26 @@
+# Dependensi & artefak build
+/vendor/
+/node_modules/
+/.next/
+
+# Konfigurasi rahasia
+.env
+.env.*
+!.env.example
+
+# Storage publik (symlink dibuat oleh `php artisan storage:link`)
+/public/storage
+storage/app/private/
+storage/logs/*.log
+
+# Barang developer
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.code-workspace
+
+# OS / editor swap
+*~
+*.swp

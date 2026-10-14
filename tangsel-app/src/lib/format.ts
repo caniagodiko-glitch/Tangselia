@@ -24,6 +24,30 @@ export const LABEL_JENIS_KESEHATAN: Record<string, string> = {
   posyandu: "Posyandu",
 };
 
+/**
+ * Fasilitas umum bawaan sebuah jenis tempat.
+ *
+ * Dipakai sebagai tampilan cadangan ketika `fasilitas` dari sumber data
+ * (OSM) kosong, supaya bagian "Fasilitas & Layanan" tidak menganga. Isinya
+ * bersifat umum untuk jenis tersebut — bukan hasil survei tempat itu —
+ * sehingga di UI perlu ditandai sebagai "umum".
+ */
+export const FASILITAS_UMUM: Record<string, string[]> = {
+  kafe: ["Tempat duduk", "Makan di tempat", "Bawa pulang"],
+  restoran: ["Tempat duduk", "Makan di tempat", "Bawa pulang"],
+  warkop: ["Tempat duduk", "Kopi & makanan ringan"],
+  gor_bulutangkis: ["Sewa lapangan", "Ruang ganti", "Parkir"],
+  lapangan_futsal: ["Sewa lapangan", "Ruang ganti", "Parkir"],
+  kolam_renang: ["Ruang ganti", "Shower", "Parkir"],
+  lapangan_basket: ["Sewa lapangan", "Parkir"],
+  gym: ["Alat latihan", "Ruang ganti", "Parkir"],
+  apotek: ["Obat bebas", "Obat resep", "Konsultasi apoteker"],
+  rumah_sakit: ["IGD", "Rawat jalan", "Apotek", "Parkir"],
+  puskesmas: ["Rawat jalan", "Poli umum", "Pelayanan ibu & anak"],
+  klinik: ["Rawat jalan", "Poli umum"],
+  posyandu: ["Imunisasi", "Penimbangan balita", "Penyuluhan gizi"],
+};
+
 export const LABEL_TIPE_BERITA: Record<string, string> = {
   editorial: "Editorial",
   agregat: "Agregat",

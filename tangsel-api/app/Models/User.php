@@ -49,4 +49,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Laporan::class, 'pelapor_id');
     }
+
+    /** @return HasMany<Ulasan, $this> */
+    public function ulasan(): HasMany
+    {
+        return $this->hasMany(Ulasan::class);
+    }
 }

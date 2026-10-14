@@ -10,6 +10,8 @@ export type DirektoriCardItem = {
   lokasi: string;
   rating: string;
   gambar: string | null;
+  ikon?: ReactNode;
+  accent?: string;
 };
 
 export type DirektoriPill = {
@@ -153,7 +155,7 @@ export default function DirektoriListView({
                   style={{
                     height: "170px",
                     position: "relative",
-                    background: `linear-gradient(135deg, ${accent}, var(--primary-dark))`,
+                    background: `linear-gradient(135deg, ${item.accent ?? accent}, var(--primary-dark))`,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -167,7 +169,7 @@ export default function DirektoriListView({
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                   ) : (
-                    <span style={{ color: "rgba(255,255,255,0.75)" }}>{icon}</span>
+                    <span style={{ color: "rgba(255,255,255,0.75)" }}>{item.ikon ?? icon}</span>
                   )}
                   {item.rating !== "-" && (
                     <span

@@ -80,17 +80,44 @@ return [
     */
 
     'peta_fasilitas' => [
+        // Koneksi & kenyamanan
         'internet_access' => 'Wi-Fi',
         'air_conditioning' => 'AC',
-        'wheelchair' => 'Akses kursi roda',
         'outdoor_seating' => 'Area luar',
+        'smoking' => 'Area merokok',
+        'reservation' => 'Reservasi',
+        'highchair' => 'Kursi bayi',
+        'baby_feeding' => 'Ruang menyusui',
+        'changing_table' => 'Ruang ganti bayi',
+        // Aksesibilitas
+        'wheelchair' => 'Akses kursi roda',
+        'toilets:wheelchair' => 'Toilet akses kursi roda',
+        // Layanan makan
         'takeaway' => 'Bawa pulang',
         'delivery' => 'Antar',
-        'smoking' => 'Area merokok',
         'vegetarian' => 'Menu vegetarian',
+        'diet:vegetarian' => 'Menu vegetarian',
+        'diet:halal' => 'Halal',
+        // Sanitasi & fasilitas umum
+        'toilets' => 'Toilet',
+        'drinking_water' => 'Air minum',
+        'parking' => 'Area parkir',
+        // Kesehatan
+        'emergency' => 'IGD',
+        'dispensing' => 'Melayani resep',
+        // Olahraga
+        'shower' => 'Shower',
+        'changing_room' => 'Ruang ganti',
+        'lit' => 'Lampu penerangan',
+        'covered' => 'Beratap',
+        // Pembayaran
         'payment:cash' => 'Pembayaran tunai',
         'payment:debit_cards' => 'Kartu debit',
         'payment:credit_cards' => 'Kartu kredit',
+        'payment:e_money' => 'E-money',
+        'payment:e-money' => 'E-money',
+        'payment:electronic_purses' => 'Dompet digital',
+        'payment:qris' => 'QRIS',
     ],
 
     /*

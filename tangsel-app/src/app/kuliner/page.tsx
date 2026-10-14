@@ -1,9 +1,22 @@
-import { Coffee } from "lucide-react";
+import type { ReactNode } from "react";
+import { Coffee, CupSoda, Utensils } from "lucide-react";
 import DirektoriListView, { type DirektoriPill } from "@/components/direktori/DirektoriListView";
-import { getKuliner, getKulinerMeta } from "@/lib/api";
+import { getKuliner, getKulinerMeta, mediaUrl } from "@/lib/api";
 import { LABEL_JENIS_TEMPAT, labelOf, ratingText } from "@/lib/format";
 
 type SearchParams = Record<string, string | string[] | undefined>;
+
+const IKON_JENIS: Record<string, ReactNode> = {
+  kafe: <Coffee size={44} />,
+  warkop: <CupSoda size={44} />,
+  restoran: <Utensils size={44} />,
+};
+
+const WARNA_JENIS: Record<string, string> = {
+  kafe: "#b45309",
+  warkop: "#0f766e",
+  restoran: "#b91c1c",
+};
 
 const str = (value: string | string[] | undefined): string | undefined => {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -52,7 +65,9 @@ export default async function KulinerPage({ searchParams }: { searchParams: Prom
     jenisLabel: labelOf(LABEL_JENIS_TEMPAT, tempat.jenis),
     lokasi: tempat.kecamatan?.nama ?? tempat.alamat,
     rating: ratingText(tempat.rating),
-    gambar: tempat.gambar,
+    gambar: mediaUrl(tempat.gambar),
+    ikon: IKON_JENIS[tempat.jenis],
+    accent: WARNA_JENIS[tempat.jenis],
   }));
 
   return (

@@ -60,6 +60,9 @@ class KulinerController extends Controller
     public function show(string $slug): TempatResource
     {
         $tempat = Tempat::with('kecamatan:id,nama,slug')
+            ->withCount(['ulasan as ulasan_jumlah' => fn ($q) => $q->where('status', 'terbit')])
+            ->withSum(['ulasan as ulasan_total' => fn ($q) => $q->where('status', 'terbit')], 'rating')
+            ->with(['ulasan' => fn ($q) => $q->where('status', 'terbit')->with('user:id,nama')->latest()->limit(5)])
             ->where('slug', $slug)
             ->where('status', 'aktif')
             ->firstOrFail();
@@ -147,6 +150,8 @@ class KulinerController extends Controller
             'alamat' => ['required', 'string', 'max:255'],
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'website' => ['nullable', 'url', 'max:255'],
+            'telepon' => ['nullable', 'string', 'max:20'],
             'jam_buka' => ['nullable', 'date_format:H:i'],
             'jam_tutup' => ['nullable', 'date_format:H:i'],
             'rentang_harga' => ['nullable', 'string', 'max:32'],
@@ -157,6 +162,10 @@ class KulinerController extends Controller
             'gambar' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'in:aktif,nonaktif'],
         ]);
+
+        if (is_string($validated['deskripsi'] ?? null) && trim((string) $validated['deskripsi']) !== '') {
+            $validated['deskripsi_sumber'] = 'editor';
+        }
 
         return $validated + [
             'slug' => Str::slug($validated['nama']),

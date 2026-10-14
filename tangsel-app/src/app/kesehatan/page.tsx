@@ -1,9 +1,26 @@
-import { Heart } from "lucide-react";
+import type { ReactNode } from "react";
+import { Baby, Heart, Hospital, Pill, Stethoscope } from "lucide-react";
 import DirektoriListView, { type DirektoriPill } from "@/components/direktori/DirektoriListView";
 import { getKesehatan, getKesehatanMeta } from "@/lib/api";
 import { LABEL_JENIS_KESEHATAN, labelOf, ratingText } from "@/lib/format";
 
 type SearchParams = Record<string, string | string[] | undefined>;
+
+const IKON_JENIS: Record<string, ReactNode> = {
+  apotek: <Pill size={44} />,
+  rumah_sakit: <Hospital size={44} />,
+  puskesmas: <Heart size={44} />,
+  klinik: <Stethoscope size={44} />,
+  posyandu: <Baby size={44} />,
+};
+
+const WARNA_JENIS: Record<string, string> = {
+  apotek: "#16a34a",
+  rumah_sakit: "#dc2626",
+  puskesmas: "#0ea5e9",
+  klinik: "#7c3aed",
+  posyandu: "#db2777",
+};
 
 const str = (value: string | string[] | undefined): string | undefined => {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -53,6 +70,8 @@ export default async function KesehatanPage({ searchParams }: { searchParams: Pr
     lokasi: layanan.kecamatan?.nama ?? layanan.alamat,
     rating: ratingText(null),
     gambar: null,
+    ikon: IKON_JENIS[layanan.jenis],
+    accent: WARNA_JENIS[layanan.jenis],
   }));
 
   return (

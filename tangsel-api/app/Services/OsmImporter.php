@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Kecamatan;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -35,7 +36,7 @@ class OsmImporter
 
         $elemen = $this->ambilElemen($fitur, $definisi);
 
-        $stats = ['dibuat' => 0, 'dilewati' => 0, 'gagal' => 0];
+        $stats = ['dibuat' => 0, 'diperkaya' => 0, 'dilewati' => 0, 'gagal' => 0];
 
         foreach ($elemen as $item) {
             $tags = $item['tags'] ?? [];
@@ -70,12 +71,6 @@ class OsmImporter
 
             $osmId = $item['type'].'/'.$item['id'];
 
-            if ($modelClass::where('osm_id', $osmId)->exists()) {
-                $stats['dilewati']++;
-
-                continue;
-            }
-
             $wilayah = $this->kecamatanTerdekat($koordinat[0], $koordinat[1], $kecamatan);
 
             if ($wilayah === null) {
@@ -85,6 +80,19 @@ class OsmImporter
             }
 
             $row = $this->susunData($fitur, $definisi, $tags, $nama, $osmId, $wilayah, $koordinat, $aturan['jenis']);
+
+            $terdaftar = $modelClass::where('osm_id', $osmId)->first();
+
+            if ($terdaftar !== null) {
+                if ($this->perkayaData($terdaftar, $row)) {
+                    $terdaftar->save();
+                    $stats['diperkaya']++;
+                } else {
+                    $stats['dilewati']++;
+                }
+
+                continue;
+            }
 
             try {
                 $modelClass::create($row);
@@ -277,15 +285,19 @@ class OsmImporter
             'nama' => mb_substr($nama, 0, 255),
             'slug' => $this->slugUnik($definisi['model'], $nama, $osmId),
             'deskripsi' => $this->susunDeskripsi($definisi['label'], $nama, $kecamatan, $tags, $fasilitas, $jam['teks']),
+            'deskripsi_sumber' => 'osm',
             'alamat' => $this->susunAlamat($tags, $kecamatan),
             'latitude' => $koordinat[0],
             'longitude' => $koordinat[1],
+            'website' => $this->susunWebsite($tags),
+            'telepon' => $this->susunTelepon($tags),
             'fasilitas' => $fasilitas === [] ? null : $fasilitas,
             'status' => 'aktif',
             'sumber' => 'osm',
             'osm_id' => $osmId,
             'google_place_id' => null,
             'jam_buka_teks' => $jam['teks'],
+            'atribusi' => [$this->atribusiOsm()],
         ];
 
         if ($fitur === 'tempat' || $fitur === 'kesehatan') {
@@ -294,11 +306,104 @@ class OsmImporter
         }
 
         if ($fitur === 'kesehatan') {
-            $row['telepon'] = $this->susunTelepon($tags);
             $row['layanan_24_jam'] = $jam['dua_puluh_empat_jam'];
         }
 
         return $row;
+    }
+
+    /**
+     * Mengisi kolom pengayaan untuk entri yang sudah terdaftar (Opsi B).
+     *
+     * Hanya kolom yang masih kosong yang diisi supaya suntingan admin tidak
+     * pernah tertimpa. Deskripsi sengaja tidak disentuh di sini.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function perkayaData(Model $terdaftar, array $data): bool
+    {
+        $diubah = false;
+
+        foreach (['website', 'telepon', 'alamat', 'jam_buka', 'jam_tutup', 'jam_buka_teks', 'rentang_harga', 'fasilitas'] as $kolom) {
+            if ($this->kosong($terdaftar->{$kolom}) && ! $this->kosong($data[$kolom] ?? null)) {
+                $terdaftar->{$kolom} = $data[$kolom];
+
+                $diubah = true;
+            }
+        }
+
+        $atribusi = is_array($terdaftar->atribusi) ? $terdaftar->atribusi : [];
+
+        if (! $this->memilikiAtribusi($atribusi, 'data', 'OpenStreetMap')) {
+            $atribusi[] = $this->atribusiOsm();
+
+            $terdaftar->atribusi = $atribusi;
+
+            $diubah = true;
+        }
+
+        return $diubah;
+    }
+
+    /**
+     * @param  array<string, mixed>  $tags
+     */
+    private function susunWebsite(array $tags): ?string
+    {
+        $website = $tags['website'] ?? $tags['contact:website'] ?? $tags['brand:website'] ?? null;
+
+        if (! is_string($website) || trim($website) === '') {
+            return null;
+        }
+
+        $website = trim($website);
+
+        if (str_starts_with($website, 'tel:')) {
+            return null;
+        }
+
+        if (! str_starts_with($website, 'http://') && ! str_starts_with($website, 'https://')) {
+            $website = 'https://'.$website;
+        }
+
+        return mb_substr($website, 0, 255);
+    }
+
+    /**
+     * Entri atribusi awal dari OpenStreetMap.
+     *
+     * @return array{jenis: string, sumber: string, lisensi: string, tautan: string, peran: string}
+     */
+    private function atribusiOsm(): array
+    {
+        return [
+            'jenis' => 'data',
+            'sumber' => 'OpenStreetMap',
+            'lisensi' => 'ODbL 1.0',
+            'tautan' => 'https://www.openstreetmap.org/copyright',
+            'peran' => 'alamat, lokasi, jam operasional, fasilitas',
+        ];
+    }
+
+    private function kosong(mixed $nilai): bool
+    {
+        return $nilai === null
+            || (is_string($nilai) && trim($nilai) === '')
+            || (is_array($nilai) && $nilai === []);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $atribusi
+     */
+    private function memilikiAtribusi(array $atribusi, string $jenis, string $sumber): bool
+    {
+        foreach ($atribusi as $entri) {
+            if (($entri['jenis'] ?? null) === $jenis && ($entri['sumber'] ?? null) === $sumber) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

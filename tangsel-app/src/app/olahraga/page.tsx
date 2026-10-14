@@ -1,9 +1,26 @@
-import { Activity } from "lucide-react";
+import type { ReactNode } from "react";
+import { Activity, CircleDot, Dumbbell, Goal, Waves } from "lucide-react";
 import DirektoriListView, { type DirektoriPill } from "@/components/direktori/DirektoriListView";
-import { getOlahraga, getOlahragaMeta } from "@/lib/api";
+import { getOlahraga, getOlahragaMeta, mediaUrl } from "@/lib/api";
 import { LABEL_JENIS_OLAHRAGA, labelOf, ratingText } from "@/lib/format";
 
 type SearchParams = Record<string, string | string[] | undefined>;
+
+const IKON_JENIS: Record<string, ReactNode> = {
+  gor_bulutangkis: <Activity size={44} />,
+  lapangan_futsal: <Goal size={44} />,
+  kolam_renang: <Waves size={44} />,
+  lapangan_basket: <CircleDot size={44} />,
+  gym: <Dumbbell size={44} />,
+};
+
+const WARNA_JENIS: Record<string, string> = {
+  gor_bulutangkis: "#0f766e",
+  lapangan_futsal: "#1d4ed8",
+  kolam_renang: "#0891b2",
+  lapangan_basket: "#c2410c",
+  gym: "#7c3aed",
+};
 
 const str = (value: string | string[] | undefined): string | undefined => {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -52,7 +69,9 @@ export default async function OlahragaPage({ searchParams }: { searchParams: Pro
     jenisLabel: labelOf(LABEL_JENIS_OLAHRAGA, fasilitas.jenis),
     lokasi: fasilitas.kecamatan?.nama ?? fasilitas.alamat,
     rating: ratingText(fasilitas.rating),
-    gambar: fasilitas.gambar,
+    gambar: mediaUrl(fasilitas.gambar),
+    ikon: IKON_JENIS[fasilitas.jenis],
+    accent: WARNA_JENIS[fasilitas.jenis],
   }));
 
   return (

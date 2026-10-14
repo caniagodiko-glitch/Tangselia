@@ -15,6 +15,56 @@ export type Query = Record<string, string | number | boolean | null | undefined>
 
 export type Kecamatan = { nama: string; slug: string };
 
+/** Fitur direktori publik; segmen URL dipakai untuk endpoint ulasan & terdekat. */
+export type DirektoriFitur = "kuliner" | "olahraga" | "kesehatan";
+
+/** Entri blok atribusi sumber data (ODbL, CC BY-SA, situs resmi, menu). */
+export type Atribusi = {
+  jenis?: string;
+  sumber: string;
+  lisensi?: string | null;
+  tautan?: string | null;
+  peran?: string | null;
+};
+
+/** Satu baris menu (hanya dari sumber nyata — tidak pernah dikarang AI). */
+export type MenuItem = {
+  nama: string;
+  harga?: string | null;
+  kategori?: string | null;
+  keterangan?: string | null;
+};
+
+/** Ulasan warga (rating + komentar + maks. 3 foto). */
+export type UlasanItem = {
+  id: number;
+  rating: number;
+  komentar: string;
+  foto: string[] | null;
+  penulis: string | null;
+  dibuat_pada: string | null;
+};
+
+/** Ringkasan ulasan yang menempel pada detail direktori. */
+export type RingkasanUlasan = {
+  rating: number | null;
+  jumlah: number;
+  daftar: UlasanItem[];
+};
+
+/** Tempat lain di sekitar, hasil endpoint `/{fitur}/{slug}/terdekat`. */
+export type TempatTerdekat = {
+  id: number;
+  nama: string;
+  slug: string;
+  jenis: string;
+  alamat: string;
+  kecamatan: string | null;
+  rating: number | string | null;
+  gambar: string | null;
+  jarak_m: number;
+};
+
 export type Tempat = {
   id: number;
   nama: string;
@@ -24,10 +74,13 @@ export type Tempat = {
   google_place_id: string | null;
   jenis: string;
   deskripsi: string | null;
+  deskripsi_sumber: string | null;
   alamat: string;
   latitude: number | string;
   longitude: number | string;
   kecamatan: Kecamatan | null;
+  website: string | null;
+  telepon: string | null;
   jam_buka: string | null;
   jam_tutup: string | null;
   jam_buka_teks: string | null;
@@ -35,9 +88,11 @@ export type Tempat = {
   rating: number | string | null;
   rating_kount: number | null;
   fasilitas: string[] | null;
-  menu: unknown;
+  menu: MenuItem[] | null;
   gambar: string | null;
   status: string;
+  atribusi: Atribusi[];
+  ulasan: RingkasanUlasan;
 };
 
 export type FasilitasOlahraga = {
@@ -49,10 +104,13 @@ export type FasilitasOlahraga = {
   google_place_id: string | null;
   jenis: string;
   deskripsi: string | null;
+  deskripsi_sumber: string | null;
   alamat: string;
   latitude: number | string;
   longitude: number | string;
   kecamatan: Kecamatan | null;
+  website: string | null;
+  telepon: string | null;
   kapasitas: number | null;
   tarif_sewa: string | null;
   jam_buka_teks: string | null;
@@ -60,6 +118,8 @@ export type FasilitasOlahraga = {
   rating: number | string | null;
   gambar: string | null;
   status: string;
+  atribusi: Atribusi[];
+  ulasan: RingkasanUlasan;
 };
 
 export type LayananKesehatan = {
@@ -71,10 +131,12 @@ export type LayananKesehatan = {
   google_place_id: string | null;
   jenis: string;
   deskripsi: string | null;
+  deskripsi_sumber: string | null;
   alamat: string;
   latitude: number | string;
   longitude: number | string;
   kecamatan: Kecamatan | null;
+  website: string | null;
   telepon: string | null;
   jam_buka: string | null;
   jam_tutup: string | null;
@@ -83,6 +145,8 @@ export type LayananKesehatan = {
   fasilitas: string[] | null;
   apotek: unknown;
   status: string;
+  atribusi: Atribusi[];
+  ulasan: RingkasanUlasan;
 };
 
 export type Berita = {
@@ -262,6 +326,33 @@ export const getKesehatanMeta = () =>
 
 export const getKesehatanDetail = (slug: string) =>
   apiFetch<Item<LayananKesehatan>>(`/kesehatan/${slug}`);
+
+// --- Direktori: ulasan warga & tempat terdekat ---
+
+export const getUlasan = (fitur: DirektoriFitur, slug: string, query?: Query) =>
+  apiFetch<Paginated<UlasanItem>>(`/${fitur}/${slug}/ulasan`, query);
+
+export const getTerdekat = (fitur: DirektoriFitur, slug: string) =>
+  apiFetch<Item<TempatTerdekat[]>>(`/${fitur}/${slug}/terdekat`);
+
+/**
+ * Ubah path foto relatif (disimpan di disk `public` Laravel) menjadi URL absolut.
+ *
+ * Nilai dari API berupa path seperti `situs/kafe/cover.jpg` atau
+ * `ulasan/abc.jpg`; frontend perlu menambahkan origin API + `/storage/`.
+ */
+export function mediaUrl(path: string | null | undefined): string | null {
+  if (!path) {
+    return null;
+  }
+
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+
+  const origin = API_URL.replace(/\/api\/?$/, "");
+  return `${origin}/storage/${path.replace(/^\/+/, "")}`;
+}
 
 // --- Berita ---
 

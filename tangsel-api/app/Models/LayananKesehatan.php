@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 #[Fillable([
     'kecamatan_id',
@@ -18,9 +19,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'sumber',
     'jam_buka_teks',
     'deskripsi',
+    'deskripsi_sumber',
     'alamat',
     'latitude',
     'longitude',
+    'website',
     'telepon',
     'jam_buka',
     'jam_tutup',
@@ -28,6 +31,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'fasilitas',
     'apotek',
     'status',
+    'atribusi',
+    'info_diunduh_pada',
 ])]
 class LayananKesehatan extends Model
 {
@@ -49,6 +54,7 @@ class LayananKesehatan extends Model
             'layanan_24_jam' => 'boolean',
             'fasilitas' => 'array',
             'apotek' => 'array',
+            'atribusi' => 'array',
         ];
     }
 
@@ -56,5 +62,11 @@ class LayananKesehatan extends Model
     public function kecamatan(): BelongsTo
     {
         return $this->belongsTo(Kecamatan::class);
+    }
+
+    /** @return MorphMany<Ulasan, $this> */
+    public function ulasan(): MorphMany
+    {
+        return $this->morphMany(Ulasan::class, 'direktori');
     }
 }

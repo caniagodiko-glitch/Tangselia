@@ -33,9 +33,10 @@ class PlacesSyncCommand extends Command
             }
 
             $this->info(sprintf(
-                '%s: dibuat %d | dilewati %d | gagal %d',
+                '%s: dibuat %d | diperkaya %d | dilewati %d | gagal %d',
                 $definisi['label'],
                 $stats['dibuat'],
+                $stats['diperkaya'],
                 $stats['dilewati'],
                 $stats['gagal'],
             ));

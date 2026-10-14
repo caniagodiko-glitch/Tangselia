@@ -5,10 +5,12 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BeritaController;
 use App\Http\Controllers\Api\DirektoriGoogleController;
 use App\Http\Controllers\Api\DirektoriImportController;
+use App\Http\Controllers\Api\DirektoriTerdekatController;
 use App\Http\Controllers\Api\KesehatanController;
 use App\Http\Controllers\Api\KulinerController;
 use App\Http\Controllers\Api\LaporanController;
 use App\Http\Controllers\Api\OlahragaController;
+use App\Http\Controllers\Api\UlasanController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -40,6 +42,10 @@ Route::prefix('{fitur}')->group(function () {
         ->where('fitur', 'kuliner|olahraga|kesehatan');
     Route::get('{slug}/foto', [DirektoriGoogleController::class, 'foto'])
         ->where('fitur', 'kuliner|olahraga|kesehatan');
+    Route::get('{slug}/ulasan', [UlasanController::class, 'index'])
+        ->where('fitur', 'kuliner|olahraga|kesehatan');
+    Route::get('{slug}/terdekat', [DirektoriTerdekatController::class, 'index'])
+        ->where('fitur', 'kuliner|olahraga|kesehatan');
 });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -48,6 +54,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/laporan', [LaporanController::class, 'store']);
     Route::get('/laporan/{kode}', [LaporanController::class, 'show']);
+
+    Route::post('/ulasan', [UlasanController::class, 'store']);
 
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         Route::get('/ping', function (Request $request) {

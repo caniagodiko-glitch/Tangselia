@@ -1,0 +1,68 @@
+[
+  {
+    "nama": "Oddy's Coffee & Eatery Rawa Buntu BSD",
+    "alamat": "Jl. Rawa Buntu Selatan No.35 Blk E1, RT.6/RW.2, Rw. Buntu, Kec. Serpong, Kota Tangerang Selatan, Banten 15310",
+    "latitude": -6.3073093,
+    "longitude": 106.6831966,
+    "telepon": "0821-2983-0109",
+    "website": "https://oddys.id/",
+    "rating": 4.7,
+    "rating_kount": 1482,
+    "jam_buka_teks": "",
+    "jam_per_hari": null,
+    "rentang_harga": null,
+    "kategori": "Kafe",
+    "fasilitas": [
+      "4,7 bintang"
+    ],
+    "foto_url": [
+      "https://lh3.googleusercontent.com/grass-cs/AABkmLdBjHHIV8vn9Ac3WyzAdop5RcDh_vqhepniy0dUXGi2sEyzfw150u__cm0l_wPKZtRRR0lSBQT80JlYoYKQqsfR0eme5d2NtnlQ9lNsddDYbcNnRPixFaZ9pdj9PBTSdZVM3P-A=w800-h600-k-no"
+    ],
+    "google_maps_url": "https://www.google.com/maps/place/Oddy's+Coffee+%26+Eatery+Rawa+Buntu+BSD/@-6.3073093,106.6831966,17z/data=!3m1!4b1!4m6!3m5!1s0x2e69e56575af93bf:0xd8dc18b305e2bb13!8m2!3d-6.3073093!4d106.6831966!16s%2Fg%2F11r2rm83l1?authuser=0&hl=id&entry=ttu&g_ep=EgoyMDI2MTAxMS4wIKXMDSoASAFQAw%3D%3D",
+    "diambil_pada": "2026-10-14T16:09:07.215547"
+  },
+  {
+    "nama": "Kafeologi Coffee Nusa Loka BSD",
+    "alamat": "Jl. Kalimantan Blok E2 no. 7a, Lengkong Gudang Tim., Kec. Serpong, Kota Tangerang Selatan, Banten 15321",
+    "latitude": -6.3005214,
+    "longitude": 106.6845489,
+    "telepon": "0821-1778-293",
+    "website": "https://www.instagram.com/kafeologi.bsd",
+    "rating": 4.8,
+    "rating_kount": 90,
+    "jam_buka_teks": "",
+    "jam_per_hari": null,
+    "rentang_harga": null,
+    "kategori": "Kedai Kopi",
+    "fasilitas": [
+      "4,8 bintang"
+    ],
+    "foto_url": [
+      "https://lh3.googleusercontent.com/grass-cs/AABkmLcRiZDFZQrFmgFTluoQ71gYcWLgVRAxte7JCf9HvTdy0qbuNQLiAjAR7zql5DBPNkUt9YbOue9fVmFi5kTKbJXpKwJpIBhjYJzdBOaNTdiZHuwFgRaGUyTvmaxiQU_m6E5AiMEw6H7iZs8Q=w800-h600-k-no"
+    ],
+    "google_maps_url": "https://www.google.com/maps/place/Kafeologi+Coffee+Nusa+Loka+BSD/data=!4m7!3m6!1s0x2e69fbc2153e0519:0xac926f8faaad5b4e!8m2!3d-6.3005214!4d106.6845489!16s%2Fg%2F11z9m7lxfj!19sChIJGQU-FcL7aS4RTlutqo9vkqw?authuser=0&hl=id&g_ep=EgoyMDI2MTAxMS4wIJJjKgBIAVAD&rclk=1",
+    "diambil_pada": "2026-10-14T16:09:45.398535"
+  },
+  {
+    "nama": "Little M Coffee",
+    "alamat": "Jl. Raya Serpong Kilometer 7 No.L1, Lengkong Karya, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15322",
+    "latitude": -6.275035,
+    "longitude": 106.6600163,
+    "telepon": "(021) 22232223",
+    "website": null,
+    "rating": 4.6,
+    "rating_kount": 154,
+    "jam_buka_teks": "",
+    "jam_per_hari": null,
+    "rentang_harga": null,
+    "kategori": "Kafe",
+    "fasilitas": [
+      "4,6 bintang"
+    ],
+    "foto_url": [
+      "https://lh3.googleusercontent.com/grass-cs/AABkmLfBldRP6SX2jYNpo6-WmkZwKmP3sW9Gz04vzKSfEX1U24c3P_etEPTb36VR1huA-1S58JOUKumB7WA8Of9PK2-bG0cmP3zeeQYzC3lXyzi-FlWgvid48kIA9xKFKhz0qiNE95k=w800-h600-k-no"
+    ],
+    "google_maps_url": "https://www.google.com/maps/place/Little+M+Coffee/data=!4m7!3m6!1s0x2e69fb0fb6f61bad:0x9aa44575e808a36d!8m2!3d-6.275035!4d106.6600163!16s%2Fg%2F11gkbjd614!19sChIJrRv2tg_7aS4RbaMI6HVFpJo?authuser=0&hl=id&g_ep=EgoyMDI2MTAxMS4wIJJjKgBIAVAD&rclk=1",
+    "diambil_pada": "2026-10-14T16:10:23.436419"
+  }
+]

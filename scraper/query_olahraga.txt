@@ -1,0 +1,31 @@
+# Query fasilitas olahraga Tangerang Selatan
+# Jalankan: python gmaps_scraper.py --file query_olahraga.txt --maks 15 --output hasil_olahraga.json
+
+# Futsal
+lapangan futsal serpong tangerang selatan
+lapangan futsal pamulang tangerang selatan
+lapangan futsal ciputat tangerang selatan
+lapangan futsal bintaro tangerang selatan
+lapangan futsal pondok aren tangerang selatan
+
+# Gym & Fitness
+gym fitness center serpong tangerang selatan
+gym fitness pamulang tangerang selatan
+gym bintaro tangerang selatan
+pusat kebugaran tangerang selatan
+
+# Kolam Renang
+kolam renang serpong tangerang selatan
+kolam renang pamulang tangerang selatan
+kolam renang ciputat tangerang selatan
+
+# Badminton & Tenis
+lapangan badminton tangerang selatan
+lapangan tenis tangerang selatan
+GOR tangerang selatan
+
+# Olahraga Lain
+lapangan basket tangerang selatan
+lapangan voli tangerang selatan
+climbing wall tangerang selatan
+yoga studio tangerang selatan

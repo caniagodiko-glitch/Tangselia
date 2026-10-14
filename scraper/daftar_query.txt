@@ -1,0 +1,23 @@
+# Daftar query untuk scraping Google Maps
+# Format: satu query per baris
+# Baris yang diawali # akan diabaikan
+# Jalankan: python gmaps_scraper.py --file daftar_query.txt --maks 10
+
+# ── Kuliner ──────────────────────────────────────
+warteg tangerang selatan
+kafe serpong
+restoran ciputat tangsel
+warkop pamulang
+kafe pondok aren tangerang selatan
+restoran bintaro
+warung makan cirendeu tangsel
+
+# ── Olahraga ─────────────────────────────────────
+lapangan futsal tangerang selatan
+kolam renang serpong
+gym fitness center tangsel
+
+# ── Kesehatan ────────────────────────────────────
+klinik ciputat tangerang selatan
+apotek serpong tangsel
+puskesmas pamulang

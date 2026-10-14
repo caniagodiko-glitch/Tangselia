@@ -1,0 +1,39 @@
+# Query kuliner Tangerang Selatan
+# Jalankan: python gmaps_scraper.py --file query_kuliner.txt --maks 15 --output hasil_kuliner.json
+
+# Kafe & Coffee Shop
+kafe serpong tangerang selatan
+coffee shop BSD tangerang selatan
+kafe pamulang tangerang selatan
+kafe pondok aren tangerang selatan
+kafe ciputat tangerang selatan
+kafe bintaro tangerang selatan
+
+# Warteg & Warung Makan
+warteg tangerang selatan
+warung makan serpong tangerang selatan
+warung nasi ciputat tangerang selatan
+warung makan pamulang tangerang selatan
+
+# Restoran
+restoran serpong tangerang selatan
+restoran bintaro tangerang selatan
+restoran ciputat tangerang selatan
+rumah makan padang tangerang selatan
+restoran seafood tangerang selatan
+restoran sunda tangerang selatan
+
+# Warkop
+warkop tangerang selatan
+warung kopi serpong
+warung kopi pamulang
+warung kopi bintaro
+
+# Makanan Spesifik
+mie ayam tangerang selatan
+bakso tangerang selatan
+soto tangerang selatan
+nasi goreng tangerang selatan
+ayam geprek tangerang selatan
+pecel lele tangerang selatan
+sate tangerang selatan

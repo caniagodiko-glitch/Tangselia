@@ -1,0 +1,38 @@
+# Query layanan kesehatan Tangerang Selatan
+# Jalankan: python gmaps_scraper.py --file query_kesehatan.txt --maks 15 --output hasil_kesehatan.json
+
+# Rumah Sakit
+rumah sakit tangerang selatan
+RS Pondok Indah Bintaro
+RS Hermina tangerang selatan
+RS Omni Hospital tangerang selatan
+RS Siloam tangerang selatan
+rumah sakit serpong
+rumah sakit pamulang
+
+# Klinik
+klinik kesehatan serpong tangerang selatan
+klinik pratama tangerang selatan
+klinik bintaro tangerang selatan
+klinik ciputat tangerang selatan
+klinik pamulang tangerang selatan
+klinik pondok aren tangerang selatan
+
+# Puskesmas
+puskesmas tangerang selatan
+puskesmas serpong
+puskesmas ciputat
+puskesmas pamulang
+puskesmas bintaro
+
+# Apotek
+apotek serpong tangerang selatan
+apotek kimia farma tangerang selatan
+apotek guardian tangerang selatan
+apotek k24 tangerang selatan
+apotek pamulang
+apotek bintaro
+
+# Dokter Spesialis & Lainnya
+dokter gigi tangerang selatan
+laboratorium klinik tangerang selatan

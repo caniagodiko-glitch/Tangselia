@@ -15,12 +15,11 @@ class DatabaseSeeder extends Seeder
             KecamatanSeeder::class,
             KategoriSeeder::class,
             UserSeeder::class,
-            BeritaSumberSeeder::class,
+            SumberSeeder::class,
             TempatSeeder::class,
             FasilitasOlahragaSeeder::class,
             LayananKesehatanSeeder::class,
             BeritaSeeder::class,
-            LaporanSeeder::class,
         ]);
     }
 }

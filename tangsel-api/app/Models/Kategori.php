@@ -22,9 +22,9 @@ class Kategori extends Model
         return $this->hasMany(Berita::class);
     }
 
-    /** @return HasMany<Laporan, $this> */
-    public function laporan(): HasMany
+    /** @return HasMany<Lowongan, $this> */
+    public function lowongan(): HasMany
     {
-        return $this->hasMany(Laporan::class);
+        return $this->hasMany(Lowongan::class);
     }
 }

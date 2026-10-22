@@ -3,9 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Berita;
-use App\Models\BeritaSumber;
 use App\Models\Kategori;
 use App\Models\Kecamatan;
+use App\Models\Sumber;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -157,7 +157,7 @@ class BeritaAdminTest extends TestCase
             'slug' => 'berita-kota',
             'urutan' => 1,
         ]);
-        BeritaSumber::factory()->create([
+        Sumber::factory()->create([
             'nama' => 'Sumber Uji',
             'feed_url' => 'https://banten.antaranews.com/rss/terkini.xml',
         ]);
@@ -184,7 +184,7 @@ class BeritaAdminTest extends TestCase
     public function test_daftar_sumber_untuk_pemantauan(): void
     {
         $admin = User::factory()->admin()->create();
-        BeritaSumber::factory()->create(['nama' => 'ANTARA News Banten', 'last_status' => 'ok']);
+        Sumber::factory()->create(['nama' => 'ANTARA News Banten', 'last_status' => 'ok']);
 
         $this->actingAs(User::factory()->create())
             ->getJson('/api/admin/berita/sumber')

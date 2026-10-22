@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\BeritaResource;
 use App\Models\Berita;
-use App\Models\BeritaSumber;
+use App\Models\Sumber;
 use App\Services\NewsFetcher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -94,7 +94,7 @@ class AdminBeritaController extends Controller
     public function sumber(): JsonResponse
     {
         return response()->json([
-            'data' => BeritaSumber::orderBy('nama')->get(),
+            'data' => Sumber::where('tipe', 'berita')->orderBy('nama')->get(),
         ]);
     }
 

@@ -44,12 +44,6 @@ class User extends Authenticatable
         return $this->hasMany(Berita::class, 'editor_id');
     }
 
-    /** @return HasMany<Laporan, $this> */
-    public function laporan(): HasMany
-    {
-        return $this->hasMany(Laporan::class, 'pelapor_id');
-    }
-
     /** @return HasMany<Ulasan, $this> */
     public function ulasan(): HasMany
     {

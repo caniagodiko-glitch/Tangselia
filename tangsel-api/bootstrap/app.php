@@ -17,6 +17,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
         ]);
+
+        // Aplikasi ini hanya menyediakan API, sehingga tidak ada rute
+        // "login" yang bisa dipakai untuk pengalihan tamu. Tanpa
+        // penyesuaian ini, permintaan tanpa token berakhir sebagai galat
+        // 500 alih-alih jawaban 401 dalam format JSON.
+        $middleware->redirectGuestsTo(
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson() ? null : route('login'),
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

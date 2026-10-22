@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
-use Database\Factories\BeritaSumberFactory;
+use Database\Factories\SumberFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'nama',
+    'tipe',
     'jenis',
     'feed_url',
     'aktif',
@@ -17,12 +19,12 @@ use Illuminate\Database\Eloquent\Model;
     'last_error',
     'item_count',
 ])]
-class BeritaSumber extends Model
+class Sumber extends Model
 {
-    /** @use HasFactory<BeritaSumberFactory> */
+    /** @use HasFactory<SumberFactory> */
     use HasFactory;
 
-    protected $table = 'berita_sumber';
+    protected $table = 'sumber';
 
     /**
      * Get the attributes that should be cast.
@@ -35,5 +37,11 @@ class BeritaSumber extends Model
             'aktif' => 'boolean',
             'last_fetched_at' => 'datetime',
         ];
+    }
+
+    /** @return HasMany<Lowongan, $this> */
+    public function lowongan(): HasMany
+    {
+        return $this->hasMany(Lowongan::class);
     }
 }

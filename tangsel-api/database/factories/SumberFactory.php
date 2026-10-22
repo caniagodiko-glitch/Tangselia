@@ -2,13 +2,13 @@
 
 namespace Database\Factories;
 
-use App\Models\BeritaSumber;
+use App\Models\Sumber;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<BeritaSumber>
+ * @extends Factory<Sumber>
  */
-class BeritaSumberFactory extends Factory
+class SumberFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -19,6 +19,7 @@ class BeritaSumberFactory extends Factory
     {
         return [
             'nama' => fake()->unique()->company().' News',
+            'tipe' => 'berita',
             'jenis' => fake()->randomElement(['rss', 'api', 'scraping']),
             'feed_url' => fake()->url(),
             'aktif' => true,
@@ -27,5 +28,16 @@ class BeritaSumberFactory extends Factory
             'last_error' => null,
             'item_count' => 0,
         ];
+    }
+
+    /**
+     * Indicate that the source feeds job postings.
+     */
+    public function lowongan(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'nama' => fake()->unique()->company().' Loker',
+            'tipe' => 'lowongan',
+        ]);
     }
 }

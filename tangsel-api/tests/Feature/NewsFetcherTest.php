@@ -3,9 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Berita;
-use App\Models\BeritaSumber;
 use App\Models\Kategori;
 use App\Models\Kecamatan;
+use App\Models\Sumber;
 use App\Services\NewsFetcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -32,7 +32,7 @@ class NewsFetcherTest extends TestCase
 
     public function test_item_rss_baru_disimpan_dengan_ringkasan_feed(): void
     {
-        $sumber = BeritaSumber::factory()->create([
+        $sumber = Sumber::factory()->create([
             'nama' => 'ANTARA News Banten',
             'feed_url' => 'https://banten.antaranews.com/rss/terkini.xml',
         ]);
@@ -63,7 +63,7 @@ class NewsFetcherTest extends TestCase
 
     public function test_dedup_melewatkan_item_yang_sudah_ada(): void
     {
-        BeritaSumber::factory()->create(['feed_url' => 'https://banten.antaranews.com/rss/terkini.xml']);
+        Sumber::factory()->create(['feed_url' => 'https://banten.antaranews.com/rss/terkini.xml']);
         Berita::factory()->agregat()->create([
             'url_asli' => 'https://banten.antaranews.com/berita/normalisasi-pamulang',
         ]);
@@ -79,7 +79,7 @@ class NewsFetcherTest extends TestCase
 
     public function test_url_asli_bing_news_diekstrak_dan_atribusi_sumber_diambil(): void
     {
-        BeritaSumber::factory()->create([
+        Sumber::factory()->create([
             'nama' => 'Bing News - Tangerang Selatan',
             'feed_url' => 'https://www.bing.com/news/search?q=tangsel&format=rss',
         ]);
@@ -99,7 +99,7 @@ class NewsFetcherTest extends TestCase
     {
         config(['ai.key' => 'kunci-uji']);
 
-        BeritaSumber::factory()->create(['feed_url' => 'https://banten.antaranews.com/rss/terkini.xml']);
+        Sumber::factory()->create(['feed_url' => 'https://banten.antaranews.com/rss/terkini.xml']);
 
         Http::fake([
             'https://banten.antaranews.com/rss/*' => Http::response($this->rssFixture()),
@@ -126,7 +126,7 @@ class NewsFetcherTest extends TestCase
     {
         config(['ai.key' => 'kunci-uji']);
 
-        BeritaSumber::factory()->create(['feed_url' => 'https://banten.antaranews.com/rss/terkini.xml']);
+        Sumber::factory()->create(['feed_url' => 'https://banten.antaranews.com/rss/terkini.xml']);
 
         Http::fake([
             'https://banten.antaranews.com/rss/*' => Http::response($this->rssFixture()),
@@ -150,7 +150,7 @@ class NewsFetcherTest extends TestCase
     {
         config(['ai.key' => 'kunci-uji']);
 
-        BeritaSumber::factory()->create(['feed_url' => 'https://banten.antaranews.com/rss/terkini.xml']);
+        Sumber::factory()->create(['feed_url' => 'https://banten.antaranews.com/rss/terkini.xml']);
 
         Http::fake([
             'https://banten.antaranews.com/rss/*' => Http::response($this->rssFixture()),
@@ -176,7 +176,7 @@ class NewsFetcherTest extends TestCase
         Kategori::factory()->create(['scope' => 'berita', 'nama' => 'Kesehatan', 'slug' => 'kesehatan-2']);
         $kecamatan = Kecamatan::factory()->create(['nama' => 'Pamulang', 'slug' => 'pamulang-2']);
 
-        BeritaSumber::factory()->create(['feed_url' => 'https://banten.antaranews.com/rss/terkini.xml']);
+        Sumber::factory()->create(['feed_url' => 'https://banten.antaranews.com/rss/terkini.xml']);
 
         Http::fake(['*' => Http::response($this->rssFixture())]);
 
@@ -190,7 +190,7 @@ class NewsFetcherTest extends TestCase
 
     public function test_sumber_gagal_mencatat_status_error(): void
     {
-        BeritaSumber::factory()->create(['feed_url' => 'https://banten.antaranews.com/rss/terkini.xml']);
+        Sumber::factory()->create(['feed_url' => 'https://banten.antaranews.com/rss/terkini.xml']);
 
         Http::fake(['*' => Http::response('server error', 500)]);
 
@@ -199,19 +199,19 @@ class NewsFetcherTest extends TestCase
         $this->assertSame(1, $stats['gagal']);
         $this->assertSame(0, $stats['dibuat']);
 
-        $sumber = BeritaSumber::sole();
+        $sumber = Sumber::sole();
         $this->assertSame('error', $sumber->last_status);
         $this->assertStringContainsString('HTTP 500', $sumber->last_error);
     }
 
     public function test_sumber_nonaktif_dilewati_dan_filter_source_bekerja(): void
     {
-        BeritaSumber::factory()->create([
+        Sumber::factory()->create([
             'nama' => 'Nonaktif',
             'feed_url' => 'https://banten.antaranews.com/rss/terkini.xml',
             'aktif' => false,
         ]);
-        $aktif = BeritaSumber::factory()->create([
+        $aktif = Sumber::factory()->create([
             'nama' => 'Sumber Aktif',
             'feed_url' => 'https://banten.antaranews.com/rss/terkini.xml',
         ]);
@@ -223,7 +223,7 @@ class NewsFetcherTest extends TestCase
         $this->assertSame(1, $stats['sumber']);
         $this->assertSame(1, $stats['dibuat']);
         $this->assertSame('ok', $aktif->fresh()->last_status);
-        $this->assertNull(BeritaSumber::where('nama', 'Nonaktif')->sole()->last_status);
+        $this->assertNull(Sumber::where('nama', 'Nonaktif')->sole()->last_status);
     }
 
     private function rssFixture(): string

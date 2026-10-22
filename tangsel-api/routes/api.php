@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AdminBeritaController;
+use App\Http\Controllers\Api\AdminLowonganController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BeritaController;
 use App\Http\Controllers\Api\DirektoriGoogleController;
@@ -8,7 +9,7 @@ use App\Http\Controllers\Api\DirektoriImportController;
 use App\Http\Controllers\Api\DirektoriTerdekatController;
 use App\Http\Controllers\Api\KesehatanController;
 use App\Http\Controllers\Api\KulinerController;
-use App\Http\Controllers\Api\LaporanController;
+use App\Http\Controllers\Api\LowonganController;
 use App\Http\Controllers\Api\OlahragaController;
 use App\Http\Controllers\Api\UlasanController;
 use Illuminate\Http\Request;
@@ -17,8 +18,10 @@ use Illuminate\Support\Facades\Route;
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 
-Route::get('/laporan', [LaporanController::class, 'index']);
-Route::get('/laporan/meta', [LaporanController::class, 'meta']);
+Route::get('/lowongan', [LowonganController::class, 'index']);
+Route::get('/lowongan/terbaru', [LowonganController::class, 'terbaru']);
+Route::get('/lowongan/meta', [LowonganController::class, 'meta']);
+Route::get('/lowongan/{slug}', [LowonganController::class, 'show']);
 
 Route::get('/berita', [BeritaController::class, 'index']);
 Route::get('/berita/terbaru', [BeritaController::class, 'terbaru']);
@@ -52,9 +55,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
 
-    Route::post('/laporan', [LaporanController::class, 'store']);
-    Route::get('/laporan/{kode}', [LaporanController::class, 'show']);
-
     Route::post('/ulasan', [UlasanController::class, 'store']);
 
     Route::middleware('role:admin')->prefix('admin')->group(function () {
@@ -83,8 +83,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/berita/{berita}', [AdminBeritaController::class, 'update']);
         Route::delete('/berita/{berita}', [AdminBeritaController::class, 'destroy']);
 
-        Route::post('/laporan/{kode}/verifikasi', [LaporanController::class, 'verifikasi']);
-        Route::post('/laporan/{kode}/status', [LaporanController::class, 'status']);
-        Route::get('/laporan', [LaporanController::class, 'adminIndex']);
+        Route::get('/lowongan', [AdminLowonganController::class, 'index']);
+        Route::get('/lowongan/meta', [AdminLowonganController::class, 'meta']);
+        Route::put('/lowongan/{lowongan}', [AdminLowonganController::class, 'update']);
+        Route::delete('/lowongan/{lowongan}', [AdminLowonganController::class, 'destroy']);
     });
 });

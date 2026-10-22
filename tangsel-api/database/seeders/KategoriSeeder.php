@@ -25,11 +25,14 @@ class KategoriSeeder extends Seeder
             ['scope' => 'berita', 'nama' => 'Olahraga', 'ikon' => null, 'urutan' => 7],
             ['scope' => 'berita', 'nama' => 'Hiburan', 'ikon' => null, 'urutan' => 8],
 
-            // Scope laporan — empat opsi form Buat Laporan sesuai mockup.
-            ['scope' => 'laporan', 'nama' => 'Jalan Rusak atau Infrastruktur', 'ikon' => '🚧', 'urutan' => 1],
-            ['scope' => 'laporan', 'nama' => 'Sampah dan Kebersihan', 'ikon' => '🗑️', 'urutan' => 2],
-            ['scope' => 'laporan', 'nama' => 'Fasilitas Umum', 'ikon' => '🏛️', 'urutan' => 3],
-            ['scope' => 'laporan', 'nama' => 'Ketertiban dan Keamanan', 'ikon' => '⚠️', 'urutan' => 4],
+            // Scope lowongan — bidang pekerjaan lowongan kerja, dipetakan
+            // dari kata kunci oleh LowonganClassifier.
+            ['scope' => 'lowongan', 'nama' => 'Teknologi dan Informasi', 'ikon' => null, 'urutan' => 1],
+            ['scope' => 'lowongan', 'nama' => 'Administrasi dan Keuangan', 'ikon' => null, 'urutan' => 2],
+            ['scope' => 'lowongan', 'nama' => 'Penjualan dan Ritel', 'ikon' => null, 'urutan' => 3],
+            ['scope' => 'lowongan', 'nama' => 'Kuliner dan Perhotelan', 'ikon' => null, 'urutan' => 4],
+            ['scope' => 'lowongan', 'nama' => 'Pendidikan dan Kesehatan', 'ikon' => null, 'urutan' => 5],
+            ['scope' => 'lowongan', 'nama' => 'Lainnya', 'ikon' => null, 'urutan' => 6],
         ];
 
         foreach ($kategori as $item) {

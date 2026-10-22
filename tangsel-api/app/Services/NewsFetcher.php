@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Berita;
-use App\Models\BeritaSumber;
+use App\Models\Sumber;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -41,7 +41,7 @@ class NewsFetcher
     {
         $stats = ['sumber' => 0, 'dibuat' => 0, 'dilewati' => 0, 'gagal' => 0];
 
-        $query = BeritaSumber::query()->where('aktif', true);
+        $query = Sumber::query()->where('aktif', true)->where('tipe', 'berita');
 
         if ($source !== null && $source !== '') {
             $query->where(function ($inner) use ($source) {
@@ -84,7 +84,7 @@ class NewsFetcher
      *
      * @return array{dibuat: int, dilewati: int, item_count: int}
      */
-    private function fetchFromSource(BeritaSumber $sumber): array
+    private function fetchFromSource(Sumber $sumber): array
     {
         $response = Http::withHeaders(['User-Agent' => self::USER_AGENT])
             ->timeout(15)
@@ -128,7 +128,7 @@ class NewsFetcher
     /**
      * @param  array{judul: string, link: ?string, pub_date: ?Carbon, ringkasan: string, gambar: ?string, source_name: ?string, source_url: ?string}  $item
      */
-    private function create(BeritaSumber $sumber, array $item, string $urlAsli): ?Berita
+    private function create(Sumber $sumber, array $item, string $urlAsli): ?Berita
     {
         $ringkasan = $item['ringkasan'] !== '' ? $item['ringkasan'] : null;
         $diringkasOleh = 'feed';

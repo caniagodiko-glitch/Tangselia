@@ -30,12 +30,12 @@ class KategoriFactory extends Factory
     }
 
     /**
-     * Indicate that the category belongs to the report scope.
+     * Indicate that the category belongs to the job posting scope.
      */
-    public function laporan(): static
+    public function lowongan(): static
     {
         return $this->state(fn (array $attributes) => [
-            'scope' => 'laporan',
+            'scope' => 'lowongan',
         ]);
     }
 }

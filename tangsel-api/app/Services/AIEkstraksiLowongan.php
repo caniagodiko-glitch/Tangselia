@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Throwable;
 
 /**
@@ -148,10 +149,13 @@ class AIEkstraksiLowongan
             return $this->hasil($m['perusahaan'], $m['posisi']);
         }
 
-        // "Loker Perusahaan" pada job board. Diperiksa sebelum aturan "di"
-        // agar nama daerah tidak tertukar dengan nama perusahaan.
-        if (preg_match('/^Loker\s+(?<perusahaan>.+?)(?:\s+di\s+.+)?$/iu', $teks, $m)) {
-            return $this->hasil($m['perusahaan'], null);
+        // "Loker Posisi di Kota" pada job board. Isi di antara "Loker" dan
+        // nama kota adalah nama posisi yang dipakai job board, misalnya
+        // "Loker Spg Peralatan Rumah Tangga di Tangerang Selatan".
+        // Diperiksa sebelum aturan "di" agar nama daerah tidak tertukar
+        // dengan nama posisi.
+        if (preg_match('/^Loker\s+(?<posisi>.+?)(?:\s+di\s+.+)?$/iu', $teks, $m)) {
+            return $this->hasil(null, $m['posisi']);
         }
 
         // "Posisi di Perusahaan". Ekor klausa seperti ", gaji Rp 4 juta"
@@ -184,7 +188,118 @@ class AIEkstraksiLowongan
             return $this->hasil($m['perusahaan'], $m['posisi']);
         }
 
+        // Judul yang isinya hanya nama perusahaan, misalnya
+        // "PT Home Credit Indonesia". Nama itu bukan nama posisi.
+        if (preg_match('/^(?<perusahaan>(?:PT\.?|CV|UD|Badan|BPR|Tbk)\.?\s+\S.{1,80})$/u', $teks, $m)) {
+            return $this->hasil($m['perusahaan'], null);
+        }
+
         return ['perusahaan' => null, 'posisi' => $this->bersihkan($teks)];
+    }
+
+    /**
+     * Membuang isi posisi dan perusahaan yang hanya berupa kalimat judul.
+     *
+     * Pembacaan cadangan berbasis pola judul bekerja paling baik pada
+     * judul job board yang terstruktur. Pada judul berita, pola yang sama
+     * dapat menghasilkan potongan kalimat seperti "Kerja untuk Diverse
+     * Lulusan" atau "Oktober 2026". Metode ini membersihkan hasil
+     * pembacaan cadangan agar kolom posisi dan perusahaan hanya berisi
+     * nama yang benar-benar informatif.
+     *
+     * @param  array{posisi: ?string, perusahaan: ?string, deskripsi: ?string, kualifikasi: ?string, cara_apply: ?string}  $hasil
+     * @return array{posisi: ?string, perusahaan: ?string, deskripsi: ?string, kualifikasi: ?string, cara_apply: ?string}
+     */
+    public function rapikanHasil(array $hasil): array
+    {
+        $hasil['posisi'] = $this->wajarSebagaiPosisi($hasil['posisi'] ?? null);
+        $hasil['perusahaan'] = $this->wajarSebagaiPerusahaan($hasil['perusahaan'] ?? null);
+
+        return $hasil;
+    }
+
+    /**
+     * Memeriksa apakah nilai layak dipakai sebagai nama posisi.
+     *
+     * Nama posisi bukan nama perusahaan, bukan keterangan bulan, dan
+     * bukan potongan kalimat judul berita.
+     */
+    private function wajarSebagaiPosisi(?string $posisi): ?string
+    {
+        $teks = trim((string) $posisi);
+
+        if ($teks === '' || mb_strlen($teks) > 80) {
+            return null;
+        }
+
+        $huruf = Str::lower($teks);
+
+        if (preg_match('/^(?:pt|cv|ud|badan|bpr|tbk)\b/u', $huruf) === 1) {
+            return null;
+        }
+
+        if (preg_match('/^(?:'.$this->bulanRegex().')\b/u', $huruf) === 1) {
+            return null;
+        }
+
+        if (preg_match('/^(?:satu|dua|tiga|empat|lima|enam|tujuh|delapan|sembilan|sepuluh|sejumlah|ribuan|ribu)\b/u', $huruf) === 1) {
+            return null;
+        }
+
+        if ($this->memuatKataKeterangan($huruf)) {
+            return null;
+        }
+
+        return $teks;
+    }
+
+    /**
+     * Memeriksa apakah nilai layak dipakai sebagai nama perusahaan.
+     */
+    private function wajarSebagaiPerusahaan(?string $perusahaan): ?string
+    {
+        $teks = trim((string) $perusahaan);
+
+        if ($teks === '' || mb_strlen($teks) > 100) {
+            return null;
+        }
+
+        $huruf = Str::lower($teks);
+
+        if (preg_match('/^(?:kota|tangerang|kecamatan|kelurahan|jalan|jl)\b/u', $huruf) === 1) {
+            return null;
+        }
+
+        if ($this->memuatKataKeterangan($huruf)) {
+            return null;
+        }
+
+        return $teks;
+    }
+
+    /**
+     * Apakah teks memuat kata yang menandai kalimat judul berita.
+     */
+    private function memuatKataKeterangan(string $huruf): bool
+    {
+        foreach ((array) config('lowongan.kata_keterangan', []) as $kata) {
+            $kata = (string) $kata;
+
+            if ($kata === '') {
+                continue;
+            }
+
+            if (preg_match('/\b'.preg_quote($kata, '/').'\b/u', $huruf) === 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function bulanRegex(): string
+    {
+        return implode('|', self::BULAN);
     }
 
     /**
@@ -248,7 +363,7 @@ class AIEkstraksiLowongan
     private function rapikanPosisi(string $posisi): string
     {
         $teks = trim($posisi);
-        $bulan = implode('|', self::BULAN);
+        $bulan = $this->bulanRegex();
 
         $teks = (string) preg_replace('/^(?:info\s+)?lowongan\s+kerja\s+/iu', '', $teks);
         $teks = (string) preg_replace('/^lowongan\s+/iu', '', $teks);
@@ -267,7 +382,7 @@ class AIEkstraksiLowongan
      */
     private function bukanNamaPerusahaan(string $teks): bool
     {
-        $bulan = implode('|', self::BULAN);
+        $bulan = $this->bulanRegex();
 
         if (preg_match('/^(?:'.$bulan.')\b/iu', $teks) === 1) {
             return true;

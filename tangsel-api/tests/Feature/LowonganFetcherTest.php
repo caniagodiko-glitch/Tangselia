@@ -146,7 +146,8 @@ class LowonganFetcherTest extends TestCase
 
     private function lowonganFixture(
         string $judul = 'Dexa Group hiring Content Creator Officer in Kota Tangerang Selatan, Banten, Indonesia - LinkedIn',
-        string $link = 'https://news.google.com/rss/articles/abc'
+        string $link = 'https://news.google.com/rss/articles/abc',
+        string $deskripsi = 'PT Dexa Group membuka lowongan posisi Content Creator Officer di Kota Tangerang Selatan.'
     ): string {
         return <<<XML
             <?xml version="1.0" encoding="UTF-8"?>
@@ -157,11 +158,71 @@ class LowonganFetcherTest extends TestCase
               <title>{$judul}</title>
               <link>{$link}</link>
               <pubDate>Mon, 05 Oct 2026 08:00:00 +0700</pubDate>
-              <description><![CDATA[PT Dexa Group membuka lowongan posisi Content Creator Officer di Kota Tangerang Selatan.]]></description>
+              <description><![CDATA[{$deskripsi}]]></description>
               <source url="https://www.linkedin.com">LinkedIn</source>
             </item>
             </channel>
             </rss>
             XML;
+    }
+
+    public function test_berita_lowongan_di_tangsel_ditandai_relevan(): void
+    {
+        Sumber::factory()->lowongan()->create([
+            'nama' => 'Lowongan Kerja Umum (Tangerang Selatan)',
+            'feed_url' => 'https://news.google.com/rss/search?q=%22lowongan+kerja%22',
+        ]);
+
+        Http::fake(['*' => Http::response($this->lowonganFixture(
+            'PT Akses Industri hiring Operator Produksi in Kota Tangerang Selatan, Banten, Indonesia',
+            'https://news.google.com/rss/articles/tangsel',
+            'PT Akses Industri membuka lowongan posisi Operator Produksi di Kota Tangerang Selatan.'
+        ))]);
+
+        app(LowonganFetcher::class)->run();
+
+        $lowongan = Lowongan::sole();
+
+        $this->assertTrue($lowongan->relevan);
+        $this->assertSame('Operator Produksi', $lowongan->posisi);
+    }
+
+    public function test_berita_lowongan_di_kota_tangerang_ditandai_tidak_relevan(): void
+    {
+        Sumber::factory()->lowongan()->create([
+            'nama' => 'Lowongan Kerja Umum (Tangerang Selatan)',
+            'feed_url' => 'https://news.google.com/rss/search?q=%22lowongan+kerja%22',
+        ]);
+
+        Http::fake(['*' => Http::response($this->lowonganFixture(
+            'PT Akses Industri hiring Operator Produksi in Kota Tangerang, Banten, Indonesia',
+            'https://news.google.com/rss/articles/kota',
+            'PT Akses Industri membuka lowongan posisi Operator Produksi di Kota Tangerang.'
+        ))]);
+
+        app(LowonganFetcher::class)->run();
+
+        $lowongan = Lowongan::sole();
+
+        $this->assertFalse($lowongan->relevan);
+        $this->assertSame('baru', $lowongan->status);
+    }
+
+    public function test_berita_dengan_judul_di_luar_wilayah_tidak_disimpan(): void
+    {
+        Sumber::factory()->lowongan()->create([
+            'nama' => 'Lowongan Kerja Umum (Tangerang Selatan)',
+            'feed_url' => 'https://news.google.com/rss/search?q=%22lowongan+kerja%22',
+        ]);
+
+        Http::fake(['*' => Http::response($this->lowonganFixture(
+            'Enam Lowongan Kerja Dibuka di Kota Tangerang, Cek Posisi dan Syaratnya',
+            'https://news.google.com/rss/articles/enam',
+            'Sejumlah perusahaan membuka enam posisi lowongan kerja di wilayah Kota Tangerang.'
+        ))]);
+
+        app(LowonganFetcher::class)->run();
+
+        $this->assertSame(0, Lowongan::count());
     }
 }

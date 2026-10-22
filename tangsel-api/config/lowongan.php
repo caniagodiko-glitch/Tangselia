@@ -109,26 +109,35 @@ return [
             'software', 'developer', 'programmer', 'teknologi', 'data',
             'analis', 'designer', 'sistem', 'jaringan', 'digital', 'coding',
             'engineer', 'machine learning', 'cyber', 'sistem informasi',
+            'it support', 'it tech', 'tech support', 'integration', 'ui ux',
+            'front end', 'back end', 'devops', 'quality assurance',
         ],
         'Administrasi dan Keuangan' => [
-            'administrasi', 'admin', 'staf', 'office', 'kantor', 'keuangan',
-            'finance', 'akuntansi', 'accounting', 'hrd', 'sdm', 'legal',
-            'hukum', 'sekretaris', 'purchasing', 'pembelian', 'payroll',
+            'administrasi', 'admin', 'staf', 'staff', 'office', 'kantor',
+            'keuangan', 'finance', 'akuntansi', 'accounting', 'hrd', 'sdm',
+            'legal', 'hukum', 'sekretaris', 'secretary', 'purchasing',
+            'pembelian', 'payroll', 'general affair', 'litigation', 'pajak',
+            'tax', 'credit analyst', 'people analytics', 'reward',
+            'spv', 'koordinator', 'coordinator', 'konsultan', 'consultant',
         ],
         'Penjualan dan Ritel' => [
             'sales', 'marketing', 'pemasaran', 'kasir', 'cashier', 'retail',
             'toko', 'store', 'promosi', 'promo', 'telemarketing', 'supervisor',
-            'area', 'sales executive',
+            'area', 'sales executive', 'spg', 'branch manager', 'outlet',
+            'property', 'in house', 'usher', 'merchandising',
         ],
         'Kuliner dan Perhotelan' => [
             'kafe', 'cafe', 'coffee', 'resto', 'restaurant', 'barista', 'koki',
             'chef', 'pelayan', 'waiter', 'waitress', 'hotel', 'hospitality',
-            'kuliner', 'catering', 'bistro', 'pabrik', 'production',
+            'kuliner', 'catering', 'bistro', 'pabrik', 'production', 'kitchen',
+            'restoran', 'gelato', 'bakso', 'pastry', 'bakery', 'patisserie',
+            'caffe', 'ice cream', 'f&B',
         ],
         'Pendidikan dan Kesehatan' => [
             'guru', 'dosen', 'pengajar', 'instruktur', 'tutor', 'klinik',
             'dokter', 'perawat', 'bidan', 'farmasi', 'apotek', 'psikolog',
-            'training', 'pelatihan',
+            'training', 'pelatihan', 'teacher', 'school', 'sekolah',
+            'pendidikan', 'education', 'montessori', 'apoteker',
         ],
     ],
 
@@ -182,6 +191,78 @@ return [
         'buka lowongan', 'rekrutmen', 'rekrut', 'magang', 'karier', 'karir',
         'career', 'jobs', 'job opening', 'pelamar', 'penempatan', 'trainee',
         'part time', 'freelance', 'lowongan kerja', 'pencari kerja',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Penanda Wilayah
+    |--------------------------------------------------------------------------
+    |
+    | Kueri lowongan di Tangerang Selatan juga mengembalikan berita lowongan
+    | dari Kota Tangerang karena keduanya berbagi nama daerah. Penanda di
+    | bawah dipakai untuk menyaring berita yang jelas berada di luar
+    | wilayah, sedangkan sumber job board dipakai apa adanya karena kueri
+    | yang dipakai sudah dibatasi pada wilayah Tangsel.
+    |
+    */
+
+    'penanda_wilayah' => [
+        'tangerang selatan',
+        'tangsel',
+        'bsd',
+        'ciputat',
+        'pamulang',
+        'serpong',
+        'setu',
+        'cisauk',
+        'legok',
+        'curug',
+    ],
+
+    'penanda_wilayah_lain' => [
+        'kota tangerang',
+        'pemkot tangerang',
+        'kotatangerang',
+        'jakarta',
+        'bandung',
+        'surabaya',
+        'medan',
+        'makassar',
+        'semarang',
+        'yogyakarta',
+        'denpasar',
+        'samarinda',
+        'balikpapan',
+        'pekanbaru',
+        'padang',
+        'manado',
+        'palembang',
+        'banjarmasin',
+        'pontianak',
+        'serang',
+        'bogor',
+        'bekasi',
+        'depok',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Kata Keterangan
+    |--------------------------------------------------------------------------
+    |
+    | Kata yang menandai sebuah potongan judul sebagai kalimat berita, bukan
+    | nama posisi atau nama perusahaan. Potongan yang memuat kata ini
+    | dibuang supaya kolom posisi dan perusahaan tidak menyimpan kalimat
+    | judul yang tidak informatif.
+    |
+    */
+
+    'kata_keterangan' => [
+        'lowongan', 'loker', 'kerja', 'job fair', 'jobfest', 'rekrutmen',
+        'rekrut', 'posisi', 'syarat', 'cek', 'terbaru', 'info', 'daftar',
+        'pelamar', 'pencari kerja', 'penempatan', 'perusahaan', 'banyak',
+        'masih', 'terbuka', 'dibuka', 'cukup', 'sampai', 'hingga',
+        'berbagai', 'jenis', 'kota',
     ],
 
     /*

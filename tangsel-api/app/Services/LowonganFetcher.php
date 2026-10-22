@@ -30,6 +30,7 @@ class LowonganFetcher
         private ArticleContentFetcher $contentFetcher,
         private AIEkstraksiLowongan $ekstraktor,
         private LowonganClassifier $classifier,
+        private LowonganWilayah $wilayah,
     ) {}
 
     /**
@@ -168,6 +169,13 @@ class LowonganFetcher
             $hasil['deskripsi'] = $cuplikan;
             $hasil['kualifikasi'] = null;
             $hasil['cara_apply'] = null;
+
+            // Pembacaan cadangan berdasarkan pola judul paling akurat pada
+            // judul job board yang terstruktur. Pada judul berita pola yang
+            // sama dapat memotong kalimat, sehingga hasilnya dibersihkan.
+            if (! $this->dariJobBoard($sumber)) {
+                $hasil = $this->ekstraktor->rapikanHasil($hasil);
+            }
         }
 
         $posisi = $hasil['posisi'] ?? null;
@@ -178,6 +186,9 @@ class LowonganFetcher
             return null;
         }
 
+        // Sumber job board memakai kueri yang sudah dibatasi pada wilayah
+        // Tangsel. Sumber umum perlu dicek wilayahnya karena kueri yang
+        // sama juga mengembalikan berita lowongan dari Kota Tangerang.
         $teks = $judul.' '.($posisi ?? '').' '.($perusahaan ?? '').' '.($deskripsi ?? '');
         $klasifikasi = $this->classifier->classify($teks);
 
@@ -200,7 +211,7 @@ class LowonganFetcher
                 'sumber' => $sumberNama ?? $sumber->nama,
                 'sumber_url' => $item['source_url'] ?? $this->origin($sumber->feed_url),
                 'status' => 'baru',
-                'relevan' => $this->relevan($judul, $sumber),
+                'relevan' => $this->relevan($judul, $deskripsi, $sumber),
                 'catatan_admin' => null,
                 'tayang_at' => null,
                 'kedaluwarsa_at' => null,
@@ -215,27 +226,56 @@ class LowonganFetcher
     }
 
     /**
-     * Menentukan apakah judul memang menyebut lowongan kerja.
+     * Menentukan apakah lowongan layak ditampilkan.
      *
-     * Sumber dari job board selalu relevan karena isinya lowongan utuh.
-     * Pencarian umum hanya relevan bila judulnya menyebut lowongan secara
-     * eksplisit, sehingga berita umum yang kebetulan memuat kata
-     * "loker" tidak langsung dianggap sebagai lowongan.
+     * Sumber dari job board memakai kueri yang sudah dibatasi pada wilayah
+     * Tangsel sehingga isinya selalu dianggap relevan, kecuali bila
+     * lowongan itu secara eksplisit menunjuk kota lain. Pencarian umum
+     * hanya relevan bila judulnya menyebut lowongan secara eksplisit dan
+     * isinya menunjuk wilayah Tangerang Selatan, sehingga berita lowongan
+     * dari Kota Tangerang ikut tersaring.
      */
-    private function relevan(string $judul, Sumber $sumber): bool
+    private function relevan(string $judul, ?string $deskripsi, Sumber $sumber): bool
+    {
+        $teks = $judul.' '.($deskripsi ?? '');
+        $jobBoard = $this->dariJobBoard($sumber);
+
+        if (! $jobBoard && ! $this->menyebutLowongan($judul)) {
+            return false;
+        }
+
+        return $this->wilayah->layak($teks, ! $jobBoard);
+    }
+
+    /**
+     * Apakah judul menyebut lowongan kerja secara eksplisit.
+     */
+    private function menyebutLowongan(string $judul): bool
+    {
+        $huruf = Str::lower($judul);
+
+        foreach ((array) config('lowongan.kata_kunci_lowongan', []) as $kata) {
+            if (str_contains($huruf, Str::lower((string) $kata))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Apakah sumber diambil dari job board.
+     *
+     * Kueri job board memakai operator site: pada domain job board, sehingga
+     * isinya lowongan utuh dan kuerinya sudah dibatasi pada wilayah
+     * Tangsel.
+     */
+    private function dariJobBoard(Sumber $sumber): bool
     {
         $feed = Str::lower(urldecode($sumber->feed_url));
 
         foreach ((array) config('lowongan.domain_job_board', []) as $domain) {
             if (str_contains($feed, Str::lower((string) $domain))) {
-                return true;
-            }
-        }
-
-        $huruf = Str::lower($judul);
-
-        foreach ((array) config('lowongan.kata_kunci_lowongan', []) as $kata) {
-            if (str_contains($huruf, Str::lower((string) $kata))) {
                 return true;
             }
         }

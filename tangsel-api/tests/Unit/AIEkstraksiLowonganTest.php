@@ -97,8 +97,13 @@ class AIEkstraksiLowonganTest extends TestCase
             ],
             'loker' => [
                 'Loker Reni Pondok Petir di Banten - Glints',
-                'Reni Pondok Petir',
                 null,
+                'Reni Pondok Petir',
+            ],
+            'loker dengan nama posisi' => [
+                'Loker Spg Peralatan Rumah Tangga di Tangerang Selatan - Glints',
+                null,
+                'Spg Peralatan Rumah Tangga',
             ],
             'lowongan kerja' => [
                 'Lowongan Kerja PT Graha Sumber Prima Elektronik - Karir.com',
@@ -119,6 +124,11 @@ class AIEkstraksiLowonganTest extends TestCase
                 'Kerja untuk Berbagai Lulusan @ Pharos Indonesia',
                 'Pharos Indonesia',
                 'Kerja untuk Berbagai Lulusan',
+            ],
+            'judul yang hanya nama perusahaan' => [
+                'PT Home Credit Indonesia',
+                'PT Home Credit Indonesia',
+                null,
             ],
         ];
     }
@@ -165,5 +175,59 @@ class AIEkstraksiLowonganTest extends TestCase
                 ],
             ],
         ];
+    }
+
+    /**
+     * @param  string  $posisi  posisi hasil pembacaan
+     * @param  ?string  $perusahaan  perusahaan hasil pembacaan
+     * @param  ?string  $posisiHarapan  posisi setelah dibersihkan
+     * @param  ?string  $perusahaanHarapan  perusahaan setelah dibersihkan
+     */
+    #[DataProvider('hasilKotor')]
+    public function test_rapikan_hasil_membuang_potongan_judul(
+        string $posisi,
+        ?string $perusahaan,
+        ?string $posisiHarapan,
+        ?string $perusahaanHarapan
+    ): void {
+        $hasil = app(AIEkstraksiLowongan::class)->rapikanHasil([
+            'posisi' => $posisi,
+            'perusahaan' => $perusahaan,
+            'deskripsi' => 'Cuplikan ringkasan.',
+            'kualifikasi' => null,
+            'cara_apply' => null,
+        ]);
+
+        $this->assertSame($posisiHarapan, $hasil['posisi']);
+        $this->assertSame($perusahaanHarapan, $hasil['perusahaan']);
+        $this->assertSame('Cuplikan ringkasan.', $hasil['deskripsi']);
+    }
+
+    /**
+     * @return array<string, array{0: string, 1: ?string, 2: ?string, 3: ?string}>
+     */
+    public static function hasilKotor(): array
+    {
+        return [
+            'kalimat judul' => ['Kerja untuk Berbagai Lulusan', 'Pharos Indonesia', null, 'Pharos Indonesia'],
+            'kata lowongan' => ['Enam Lowongan Kerja Dibuka', 'Kota Tangerang', null, null],
+            'keterangan bulan' => ['Oktober 2026', 'Gebyar Rekrutmen Tangerang', null, null],
+            'nama perusahaan sebagai posisi' => ['PT Home Credit Indonesia', null, null, null],
+            'kata penanda wilayah' => ['Konsultan Sertifikasiku', 'Kota Tangerang', 'Konsultan Sertifikasiku', null],
+        ];
+    }
+
+    public function test_rapikan_hasil_mempertahankan_nilai_yang_wajar(): void
+    {
+        $hasil = app(AIEkstraksiLowongan::class)->rapikanHasil([
+            'posisi' => 'Barista',
+            'perusahaan' => 'PT Kopi Nusantara',
+            'deskripsi' => null,
+            'kualifikasi' => null,
+            'cara_apply' => null,
+        ]);
+
+        $this->assertSame('Barista', $hasil['posisi']);
+        $this->assertSame('PT Kopi Nusantara', $hasil['perusahaan']);
     }
 }

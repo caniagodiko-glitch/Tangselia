@@ -1,15 +1,8 @@
-import { Activity, ArrowRight, Coffee, Heart, MapPin, Newspaper, Search } from "lucide-react";
+import { Activity, ArrowRight, Building2, Coffee, Heart, Newspaper, Search } from "lucide-react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
-import { getBeritaTerbaru, getLaporan, type Berita } from "@/lib/api";
-import { LABEL_STATUS_LAPORAN, formatTanggal, labelOf, waktuRelatif } from "@/lib/format";
-
-const STATUS_COLOR: Record<string, string> = {
-  diverifikasi: "var(--primary-light)",
-  diproses: "var(--warning)",
-  selesai: "var(--success)",
-  ditolak: "var(--error)",
-};
+import { getBeritaTerbaru, getLowonganTerbaru, type Berita } from "@/lib/api";
+import { LABEL_JENIS_LOWONGAN, formatTanggal, waktuRelatif } from "@/lib/format";
 
 function NewsThumb({ item, className, style }: { item: Berita; className?: string; style?: CSSProperties }) {
   if (item.gambar) {
@@ -39,15 +32,15 @@ function NewsThumb({ item, className, style }: { item: Berita; className?: strin
 }
 
 export default async function HomePage() {
-  const [beritaRes, laporanRes] = await Promise.all([
+  const [beritaRes, lowonganRes] = await Promise.all([
     getBeritaTerbaru(4),
-    getLaporan({ per_page: 3 }),
+    getLowonganTerbaru(4),
   ]);
 
   const berita = beritaRes.data;
   const featured = berita[0];
   const lainnya = berita.slice(1);
-  const laporan = laporanRes.data;
+  const lowongan = lowonganRes.data;
 
   return (
     <div>
@@ -62,7 +55,7 @@ export default async function HomePage() {
         <div className="container hero-content">
           <h1 className="hero-title">Tangsel, lebih dekat dalam satu tempat.</h1>
           <p className="hero-subtitle">
-            Temukan tempat menarik, layanan kesehatan, berita terkini, dan sampaikan laporan untuk Tangsel.
+            Temukan tempat menarik, layanan kesehatan, berita terkini, dan lowongan kerja di Tangsel.
           </p>
           <form action="/kuliner" method="get" className="search-bar">
             <input
@@ -181,56 +174,93 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* Citizen Report Teaser */}
+      {/* Lowongan Terbaru Section */}
       <section className="section" style={{ background: "var(--surface-hover)", marginTop: "var(--spacing-xl)" }}>
         <div className="container">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "var(--spacing-xl)", alignItems: "center" }}>
+          <div className="section-header">
             <div>
-              <h2 className="section-title" style={{ marginBottom: "1rem" }}>Ada masalah di sekitar kamu?</h2>
-              <p style={{ fontSize: "1.2rem", color: "var(--text-muted)", marginBottom: "2rem" }}>
-                Laporkan fasilitas atau kondisi lingkungan yang membutuhkan perhatian. Kami pantau dan tindak lanjuti.
+              <span className="tag" style={{ background: "var(--primary)", color: "white", marginBottom: "1rem" }}>
+                KARIER
+              </span>
+              <h2 className="section-title">Lowongan Terbaru</h2>
+              <p style={{ fontSize: "1rem", color: "var(--text-muted)", maxWidth: "640px", marginTop: "0.75rem" }}>
+                Lowongan kerja dan magang di Tangerang Selatan yang dihimpun dari job board dan pemberita, lalu
+                dikurasi oleh admin TANGSEL LIA.
               </p>
-              <Link href="/laporan/buat" className="btn btn-primary" style={{ fontSize: "1.1rem", padding: "1rem 2rem" }}>
-                Buat Laporan Sekarang
-              </Link>
             </div>
+            <Link href="/lowongan" className="section-link">
+              Lihat semua <ArrowRight size={18} />
+            </Link>
+          </div>
 
-            <div style={{ background: "white", padding: "var(--spacing-lg)", borderRadius: "24px", boxShadow: "0 20px 40px rgba(0,0,0,0.05)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-                <h3 style={{ fontSize: "1.25rem" }}>Pantau Aduan Sekitar</h3>
-                <Link href="/laporan" style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--primary)" }}>Semua</Link>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                {laporan.length === 0 ? (
-                  <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>Belum ada laporan terverifikasi.</p>
-                ) : (
-                  laporan.map((item) => (
-                    <Link
-                      key={item.id}
-                      href="/laporan"
+          {lowongan.length === 0 ? (
+            <div style={{ padding: "3rem 1.5rem", textAlign: "center", border: "1px dashed var(--border)", borderRadius: "12px", color: "var(--text-muted)" }}>
+              Belum ada lowongan yang tayang.
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}>
+              {lowongan.map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/lowongan/${item.slug}`}
+                  style={{
+                    background: "white",
+                    padding: "1.5rem",
+                    borderRadius: "16px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.6rem",
+                    color: "inherit",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                    <span
                       style={{
-                        padding: "1rem",
-                        borderLeft: `3px solid ${STATUS_COLOR[item.status] ?? "var(--border)"}`,
-                        background: "var(--surface-hover)",
-                        borderRadius: "0 8px 8px 0",
-                        display: "block",
-                        color: "inherit",
+                        fontSize: "0.7rem",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        color: "var(--primary)",
+                        background: "#e6f4f1",
+                        padding: "0.2rem 0.7rem",
+                        borderRadius: "20px",
                       }}
                     >
-                      <div style={{ fontSize: "0.75rem", fontWeight: 600, color: STATUS_COLOR[item.status] ?? "var(--text-muted)", marginBottom: "0.25rem", textTransform: "uppercase" }}>
-                        {labelOf(LABEL_STATUS_LAPORAN, item.status)}
-                        {item.kecamatan ? ` • ${item.kecamatan.nama}` : ""}
-                      </div>
-                      <h4 style={{ fontSize: "1rem", marginBottom: "0.35rem" }}>{item.judul}</h4>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.75rem", color: "var(--text-light)" }}>
-                        <MapPin size={12} /> {item.kode}
-                      </div>
-                    </Link>
-                  ))
-                )}
-              </div>
+                      {LABEL_JENIS_LOWONGAN[item.jenis] ?? item.jenis}
+                    </span>
+                    {item.kategori && (
+                      <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>{item.kategori.nama}</span>
+                    )}
+                  </div>
+
+                  <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem", lineHeight: 1.35, color: "#111" }}>
+                    {item.posisi ?? item.judul}
+                  </h3>
+
+                  {item.perusahaan && (
+                    <p style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 600 }}>
+                      <Building2 size={14} /> {item.perusahaan}
+                    </p>
+                  )}
+
+                  <div
+                    style={{
+                      marginTop: "auto",
+                      paddingTop: "0.75rem",
+                      borderTop: "1px solid var(--border)",
+                      fontSize: "0.75rem",
+                      color: "var(--text-light)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {item.sumber ?? "TANGSEL LIA"}
+                    {item.published_at ? ` • ${formatTanggal(item.published_at)}` : ""}
+                  </div>
+                </Link>
+              ))}
             </div>
-          </div>
+          )}
         </div>
       </section>
     </div>

@@ -2,9 +2,9 @@
  * Klien API TANGSEL LIA.
  *
  * Semua request di sini menyasar endpoint backend Laravel (Sanctum).
- * Endpoint publik (direktori, berita, feed laporan) tidak butuh auth.
- * Endpoint yang butuh login (POST laporan, admin) akan ditambahkan
- * setelah strategi auth diputuskan.
+ * Endpoint publik (direktori, berita, lowongan) tidak butuh auth.
+ * Endpoint yang butuh login (admin, ulasan warga) ditambahkan setelah
+ * strategi auth diputuskan.
  */
 
 export const API_URL =
@@ -169,24 +169,33 @@ export type Berita = {
   created_at: string | null;
 };
 
-export type Laporan = {
+/** Lowongan kerja atau magang yang sudah tayang setelah kurasi admin. */
+export type Lowongan = {
   id: number;
   kode: string;
   judul: string;
-  deskripsi: string;
-  latitude: number | string;
-  longitude: number | string;
-  status: string;
-  kategori: { id: number; nama: string; slug: string; ikon: string | null } | null;
+  slug: string;
+  posisi: string | null;
+  perusahaan: string | null;
+  jenis: "magang" | "karir" | "part-time";
+  deskripsi: string | null;
+  kualifikasi: string | null;
+  cara_apply: string | null;
+  url_asli: string | null;
+  sumber: string | null;
+  sumber_url: string | null;
+  kategori: { id: number; nama: string; slug: string } | null;
   kecamatan: { id: number; nama: string; slug: string } | null;
-  foto: string[];
-  pelapor: { id: number; nama: string } | null;
+  status: string;
+  relevan: boolean;
   catatan_admin: string | null;
-  diselesaikan_at: string | null;
+  tayang_at: string | null;
+  kedaluwarsa_at: string | null;
+  published_at: string | null;
   created_at: string | null;
 };
 
-/** Hasil `cursorPaginate()` Laravel (Direktori, Berita, Laporan). */
+/** Hasil `cursorPaginate()` Laravel (Direktori, Berita, Lowongan). */
 export type Paginated<T> = {
   data: T[];
   links: {
@@ -215,8 +224,15 @@ export type MetaBerita = {
   tipe: FilterJenis[];
   sumber: { nama: string; jumlah: number }[];
 };
-export type MetaLaporan = {
-  kategori: { id: number; nama: string; slug: string; ikon: string | null }[];
+export type MetaLowongan = {
+  kategori: FilterKecamatan[];
+  kecamatan: FilterKecamatan[];
+  jenis: FilterJenis[];
+};
+
+/** Metadata kurasi admin: kategori bidang dan kecamatan yang bisa dipilih. */
+export type MetaKurasiLowongan = {
+  kategori: { id: number; nama: string; slug: string }[];
   kecamatan: { id: number; nama: string; slug: string }[];
 };
 export type BeritaSumber = {
@@ -367,9 +383,16 @@ export const getBeritaMeta = () => apiFetch<Item<MetaBerita>>("/berita/meta");
 export const getBeritaDetail = (slug: string) =>
   apiFetch<Item<Berita>>(`/berita/${slug}`);
 
-// --- Laporan (feed publik, status diverifikasi ke atas) ---
+// --- Lowongan kerja & magang ---
 
-export const getLaporan = (query?: Query) =>
-  apiFetch<Paginated<Laporan>>("/laporan", query);
+export const getLowongan = (query?: Query) =>
+  apiFetch<Paginated<Lowongan>>("/lowongan", query);
 
-export const getLaporanMeta = () => apiFetch<Item<MetaLaporan>>("/laporan/meta");
+export const getLowonganTerbaru = (limit = 5) =>
+  apiFetch<Item<Lowongan[]>>("/lowongan/terbaru", { limit });
+
+export const getLowonganMeta = () =>
+  apiFetch<Item<MetaLowongan>>("/lowongan/meta");
+
+export const getLowonganDetail = (slug: string) =>
+  apiFetch<Item<Lowongan>>(`/lowongan/${slug}`);

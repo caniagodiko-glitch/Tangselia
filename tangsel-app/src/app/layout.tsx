@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Home, Compass, FileText, User, AlertCircle, PlusCircle } from "lucide-react";
+import { Home, Compass, FileText, Briefcase, User } from "lucide-react";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -33,16 +33,12 @@ export default async function RootLayout({
                 <li><Link href="/olahraga">Olahraga</Link></li>
                 <li><Link href="/kesehatan">Kesehatan</Link></li>
                 <li><Link href="/berita">Berita</Link></li>
-                <li><Link href="/laporan">Laporan Warga</Link></li>
+                <li><Link href="/lowongan">Lowongan</Link></li>
               </ul>
             </nav>
 
             <div className="desktop-nav">
               <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                <Link href="/laporan/buat" className="btn btn-accent" style={{ display: "flex", gap: "0.5rem" }}>
-                  <AlertCircle size={18} />
-                  Buat Laporan
-                </Link>
                 {user ? (
                   <Link href={dashboardHref} className="btn btn-outline" style={{ display: "flex", gap: "0.5rem" }}>
                     <User size={18} />
@@ -76,9 +72,9 @@ export default async function RootLayout({
             <FileText size={24} />
             <span>Berita</span>
           </Link>
-          <Link href="/laporan/buat" className="mobile-nav-item">
-            <PlusCircle size={24} />
-            <span>Lapor</span>
+          <Link href="/lowongan" className="mobile-nav-item">
+            <Briefcase size={24} />
+            <span>Lowongan</span>
           </Link>
           <Link href={user ? dashboardHref : "/login"} className="mobile-nav-item">
             <User size={24} />
@@ -102,7 +98,7 @@ export default async function RootLayout({
                 <li><Link href="/kuliner">Kuliner</Link></li>
                 <li><Link href="/olahraga">Tempat Olahraga</Link></li>
                 <li><Link href="/kesehatan">Layanan Kesehatan</Link></li>
-                <li><Link href="/laporan">Laporan Warga</Link></li>
+                <li><Link href="/lowongan">Lowongan Kerja</Link></li>
               </ul>
             </div>
             <div className="footer-col">

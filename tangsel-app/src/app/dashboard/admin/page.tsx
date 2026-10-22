@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Activity, CheckCircle2, Clock, FileText, Rss } from "lucide-react";
-import AdminLaporanPanel from "@/components/admin/AdminLaporanPanel";
+import { Briefcase, CheckCircle2, Clock, FileText, Rss, XCircle } from "lucide-react";
+import AdminLowonganPanel from "@/components/admin/AdminLowonganPanel";
 import BeritaRefresh from "@/components/admin/BeritaRefresh";
 import LogoutButton from "@/components/auth/LogoutButton";
 import { authedFetch, getCurrentUser } from "@/lib/auth";
-import type { BeritaSumber, Laporan, Paginated } from "@/lib/api";
+import type { BeritaSumber, Lowongan, MetaKurasiLowongan, Paginated } from "@/lib/api";
 import { formatTanggal } from "@/lib/format";
 
 export default async function AdminDashboard() {
@@ -18,14 +18,16 @@ export default async function AdminDashboard() {
     redirect("/dashboard/user");
   }
 
-  const [laporanRes, sumberRes] = await Promise.all([
-    authedFetch<Paginated<Laporan>>("/admin/laporan", { per_page: 50 }),
+  const [lowonganRes, metaRes, sumberRes] = await Promise.all([
+    authedFetch<Paginated<Lowongan>>("/admin/lowongan", { per_page: 50 }),
+    authedFetch<{ data: MetaKurasiLowongan }>("/admin/lowongan/meta"),
     authedFetch<{ data: BeritaSumber[] }>("/admin/berita/sumber"),
   ]);
 
-  const laporan = laporanRes.data;
+  const lowongan = lowonganRes.data;
+  const meta = metaRes.data;
   const sumber = sumberRes.data;
-  const hitung = (status: string) => laporan.filter((item) => item.status === status).length;
+  const hitung = (status: string) => lowongan.filter((item) => item.status === status).length;
 
   return (
     <div style={{ background: "#f1f5f9", minHeight: "100vh", display: "flex" }}>
@@ -38,7 +40,7 @@ export default async function AdminDashboard() {
         </div>
         <div style={{ padding: "1.5rem 1rem", display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1 }}>
           <Link href="/dashboard/admin" className="admin-nav-item active">
-            <Activity size={18} /> Laporan Warga
+            <Briefcase size={18} /> Kurasi Lowongan
           </Link>
           <Link href="/berita" className="admin-nav-item">
             <FileText size={18} /> Berita & Editorial
@@ -65,7 +67,7 @@ export default async function AdminDashboard() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <h1 style={{ fontSize: "1.75rem", color: "#0f172a", marginBottom: "0.25rem" }}>Moderasi Platform</h1>
-            <p style={{ color: "#64748b" }}>Verifikasi laporan warga dan pantau sumber berita.</p>
+            <p style={{ color: "#64748b" }}>Kurasi lowongan kerja dan pantau sumber berita.</p>
           </div>
           <BeritaRefresh />
         </div>
@@ -73,10 +75,10 @@ export default async function AdminDashboard() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.5rem", marginBottom: "2rem" }}>
           <div className="admin-stat-card">
             <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "#f1f5f9", color: "#475569", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "0.9rem" }}>
-              <FileText size={22} />
+              <Briefcase size={22} />
             </div>
-            <div style={{ fontSize: "2rem", fontWeight: 700, color: "#0f172a", lineHeight: 1, marginBottom: "0.4rem" }}>{laporan.length}</div>
-            <div style={{ color: "#64748b", fontSize: "0.85rem", fontWeight: 500 }}>Laporan terbaru dimuat</div>
+            <div style={{ fontSize: "2rem", fontWeight: 700, color: "#0f172a", lineHeight: 1, marginBottom: "0.4rem" }}>{lowongan.length}</div>
+            <div style={{ color: "#64748b", fontSize: "0.85rem", fontWeight: 500 }}>Lowongan terbaru dimuat</div>
           </div>
 
           <div className="admin-stat-card">
@@ -84,28 +86,28 @@ export default async function AdminDashboard() {
               <Clock size={22} />
             </div>
             <div style={{ fontSize: "2rem", fontWeight: 700, color: "#0f172a", lineHeight: 1, marginBottom: "0.4rem" }}>{hitung("baru")}</div>
-            <div style={{ color: "#64748b", fontSize: "0.85rem", fontWeight: 500 }}>Menunggu verifikasi</div>
-          </div>
-
-          <div className="admin-stat-card">
-            <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "#fef3c7", color: "#d97706", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "0.9rem" }}>
-              <Activity size={22} />
-            </div>
-            <div style={{ fontSize: "2rem", fontWeight: 700, color: "#0f172a", lineHeight: 1, marginBottom: "0.4rem" }}>{hitung("diproses")}</div>
-            <div style={{ color: "#64748b", fontSize: "0.85rem", fontWeight: 500 }}>Sedang diproses</div>
+            <div style={{ color: "#64748b", fontSize: "0.85rem", fontWeight: 500 }}>Menunggu kurasi</div>
           </div>
 
           <div className="admin-stat-card">
             <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "#dcfce7", color: "#10b981", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "0.9rem" }}>
               <CheckCircle2 size={22} />
             </div>
-            <div style={{ fontSize: "2rem", fontWeight: 700, color: "#0f172a", lineHeight: 1, marginBottom: "0.4rem" }}>{hitung("selesai")}</div>
-            <div style={{ color: "#64748b", fontSize: "0.85rem", fontWeight: 500 }}>Selesai</div>
+            <div style={{ fontSize: "2rem", fontWeight: 700, color: "#0f172a", lineHeight: 1, marginBottom: "0.4rem" }}>{hitung("tayang")}</div>
+            <div style={{ color: "#64748b", fontSize: "0.85rem", fontWeight: 500 }}>Tayang di publik</div>
+          </div>
+
+          <div className="admin-stat-card">
+            <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "#fee2e2", color: "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "0.9rem" }}>
+              <XCircle size={22} />
+            </div>
+            <div style={{ fontSize: "2rem", fontWeight: 700, color: "#0f172a", lineHeight: 1, marginBottom: "0.4rem" }}>{hitung("ditolak")}</div>
+            <div style={{ color: "#64748b", fontSize: "0.85rem", fontWeight: 500 }}>Ditolak saat kurasi</div>
           </div>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)", gap: "1.5rem", alignItems: "start" }}>
-          <AdminLaporanPanel laporan={laporan} />
+          <AdminLowonganPanel lowongan={lowongan} meta={meta} />
 
           <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", padding: "1.5rem" }}>
             <h2 style={{ fontSize: "1.25rem", color: "#0f172a", marginBottom: "0.25rem" }}>Sumber Berita</h2>

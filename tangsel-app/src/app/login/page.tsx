@@ -28,8 +28,8 @@ export default async function LoginPage({
           </h1>
           <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>
             {mode === "register"
-              ? "Daftar untuk mengirim dan memantau laporan warga."
-              : "Masuk untuk mengirim laporan atau mengelola konten."}
+              ? "Daftar untuk mendapat informasi lowongan kerja dan magang di Tangsel."
+              : "Masuk untuk melihat lowongan terbaru atau mengelola konten."}
           </p>
         </div>
 

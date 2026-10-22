@@ -53,12 +53,19 @@ export const LABEL_TIPE_BERITA: Record<string, string> = {
   agregat: "Agregat",
 };
 
-export const LABEL_STATUS_LAPORAN: Record<string, string> = {
-  baru: "Baru",
-  diverifikasi: "Diverifikasi",
+/** Status kurasi lowongan di panel admin. */
+export const LABEL_STATUS_LOWONGAN: Record<string, string> = {
+  baru: "Menunggu Kurasi",
+  tayang: "Tayang",
   ditolak: "Ditolak",
-  diproses: "Diproses",
-  selesai: "Selesai",
+  kedaluwarsa: "Kedaluwarsa",
+};
+
+/** Jenis lowongan: magang, karier, atau paruh waktu. */
+export const LABEL_JENIS_LOWONGAN: Record<string, string> = {
+  magang: "Magang",
+  karir: "Karier",
+  "part-time": "Part Time",
 };
 
 /** Ambil label dari map, fallback ke nilai mentah yang dirapikan. */

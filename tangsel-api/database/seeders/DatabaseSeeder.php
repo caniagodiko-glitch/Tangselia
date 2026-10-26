@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             FasilitasOlahragaSeeder::class,
             LayananKesehatanSeeder::class,
             BeritaSeeder::class,
+            UlasanSeeder::class,
         ]);
     }
 }

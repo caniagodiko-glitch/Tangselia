@@ -24,3 +24,10 @@ Thumbs.db
 # OS / editor swap
 *~
 *.swp
+
+# Python (generator dokumen)
+__pycache__/
+*.pyc
+
+# Lock file Microsoft Word
+~$*.docx

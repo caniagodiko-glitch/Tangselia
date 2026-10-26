@@ -10,6 +10,21 @@ const str = (value: string | string[] | undefined): string | undefined => {
   return raw?.trim() || undefined;
 };
 
+/**
+ * Ambil nilai cursor dari tautan paginasi API.
+ *
+ * API mengembalikan tautan lengkap ke backend, sedangkan halaman ini
+ * memakai tautan internal. Yang dibutuhkan hanya nilai cursor-nya.
+ */
+function cursorOf(link: string | null): string | undefined {
+  if (!link) {
+    return undefined;
+  }
+
+  const url = new URL(link, "http://localhost");
+  return url.searchParams.get("cursor") ?? undefined;
+}
+
 function Badge({ children, color = "var(--primary)" }: { children: React.ReactNode; color?: string }) {
   return (
     <span style={{ color, fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
@@ -58,16 +73,17 @@ export default async function BeritaPage({ searchParams }: { searchParams: Promi
     sumber: str(sp.sumber),
     q: str(sp.q),
   };
+  const cursor = str(sp.cursor);
 
   const [list, meta, terbaru] = await Promise.all([
-    getBerita({ ...current, per_page: 12 }),
+    getBerita({ ...current, cursor, per_page: 12 }),
     getBeritaMeta(),
     getBeritaTerbaru(5),
   ]);
 
   const categories = meta.data.kategori;
 
-  const buildHref = (patch: Partial<typeof current>): string => {
+  const buildHref = (patch: Partial<typeof current>, targetCursor?: string): string => {
     const merged = { ...current, ...patch };
     const params = new URLSearchParams();
     if (merged.kategori) params.set("kategori", merged.kategori);
@@ -75,12 +91,17 @@ export default async function BeritaPage({ searchParams }: { searchParams: Promi
     if (merged.tipe) params.set("tipe", merged.tipe);
     if (merged.sumber) params.set("sumber", merged.sumber);
     if (merged.q) params.set("q", merged.q);
+    if (targetCursor) params.set("cursor", targetCursor);
     const qs = params.toString();
     return qs ? `/berita?${qs}` : "/berita";
   };
 
-  const featured = list.data[0];
-  const rest = list.data.slice(1);
+  const cursorBerikut = cursorOf(list.links.next);
+  const cursorSebelumnya = cursorOf(list.links.prev);
+
+  // Sorotan besar hanya di halaman pertama; halaman berikutnya tampil rata.
+  const featured = cursor ? undefined : list.data[0];
+  const rest = cursor ? list.data : list.data.slice(1);
   const trending = terbaru.data.slice(0, 5);
 
   return (
@@ -100,6 +121,9 @@ export default async function BeritaPage({ searchParams }: { searchParams: Promi
 
           <form action="/berita" method="get" className="search-bar" style={{ maxWidth: "360px", border: "1px solid var(--border)" }}>
             {current.kategori && <input type="hidden" name="kategori" value={current.kategori} />}
+            {current.kecamatan && <input type="hidden" name="kecamatan" value={current.kecamatan} />}
+            {current.tipe && <input type="hidden" name="tipe" value={current.tipe} />}
+            {current.sumber && <input type="hidden" name="sumber" value={current.sumber} />}
             <input type="text" name="q" defaultValue={current.q ?? ""} className="search-input" placeholder="Cari berita..." />
             <button type="submit" className="search-btn" aria-label="Cari berita">
               <Search size={18} />
@@ -200,6 +224,28 @@ export default async function BeritaPage({ searchParams }: { searchParams: Promi
                   ))}
                 </div>
               </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", marginTop: "var(--spacing-xl)", flexWrap: "wrap" }}>
+              {cursorSebelumnya ? (
+                <Link href={buildHref({}, cursorSebelumnya)} className="btn btn-outline">
+                  <ArrowRight size={16} style={{ transform: "rotate(180deg)" }} /> Sebelumnya
+                </Link>
+              ) : (
+                <span />
+              )}
+
+              <span style={{ fontSize: "0.8rem", color: "var(--text-light)", fontWeight: 600 }}>
+                Menampilkan {list.data.length} berita
+              </span>
+
+              {cursorBerikut ? (
+                <Link href={buildHref({}, cursorBerikut)} className="btn btn-outline">
+                  Berikutnya <ArrowRight size={16} />
+                </Link>
+              ) : (
+                <span />
+              )}
             </div>
           </>
         )}

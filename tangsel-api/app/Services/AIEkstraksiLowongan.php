@@ -2,10 +2,7 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Throwable;
 
 /**
  * Ekstraksi terstruktur dari artikel lowongan kerja memakai Google Gemini.
@@ -27,50 +24,23 @@ class AIEkstraksiLowongan
      */
     public function ekstrak(string $judul, string $isi): ?array
     {
-        $key = config('ai.key');
-
-        if (! is_string($key) || $key === '') {
-            return null;
-        }
-
         $prompt = strtr((string) config('lowongan.prompt_ekstraksi'), [
             ':judul' => mb_substr($judul, 0, 300),
             ':isi' => mb_substr($isi, 0, 6000),
         ]);
 
-        try {
-            $response = Http::withHeaders(['x-goog-api-key' => $key])
-                ->timeout(30)
-                ->post(config('ai.endpoint').config('ai.model').':generateContent', [
-                    'contents' => [
-                        ['parts' => [['text' => $prompt]]],
-                    ],
-                    'generationConfig' => [
-                        'temperature' => 0.1,
-                        'maxOutputTokens' => 900,
-                        'responseMimeType' => 'application/json',
-                        'responseSchema' => $this->skema(),
-                    ],
-                ]);
-        } catch (Throwable $e) {
-            Log::warning('Gemini tidak terjangkau untuk ekstraksi lowongan: '.$e->getMessage());
+        $teks = app(GeminiClient::class)->teks($prompt, [
+            'temperature' => 0.1,
+            'maxOutputTokens' => 900,
+            'responseMimeType' => 'application/json',
+            'responseSchema' => $this->skema(),
+        ], 'ekstraksi lowongan');
 
+        if ($teks === null) {
             return null;
         }
 
-        if (! $response->successful()) {
-            Log::warning('Gemini mengembalikan status '.$response->status().' untuk ekstraksi lowongan.');
-
-            return null;
-        }
-
-        $teks = $response->json('candidates.0.content.parts.0.text');
-
-        if (! is_string($teks) || trim($teks) === '') {
-            return null;
-        }
-
-        $data = json_decode(trim($teks), true);
+        $data = json_decode($teks, true);
 
         if (! is_array($data)) {
             return null;

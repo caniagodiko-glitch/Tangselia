@@ -3,9 +3,6 @@
 namespace App\Services;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 /**
  * Perangkai deskripsi kaya memakai Google Gemini (§4.2, paket Gratis).
@@ -19,12 +16,6 @@ class AIDeskripsiTempat
 {
     public function rangkai(Model $tempat, array $konteks): ?string
     {
-        $key = config('ai.key');
-
-        if (! is_string($key) || $key === '') {
-            return null;
-        }
-
         $prompt = strtr((string) config('ai.prompt_deskripsi'), [
             ':nama' => mb_substr((string) $tempat->nama, 0, 200),
             ':jenis' => (string) ($konteks['jenis'] ?? '-'),
@@ -35,38 +26,9 @@ class AIDeskripsiTempat
             ':website' => (string) ($tempat->website ?? '-'),
         ]);
 
-        try {
-            $response = Http::withHeaders(['x-goog-api-key' => $key])
-                ->timeout(30)
-                ->post(config('ai.endpoint').config('ai.model').':generateContent', [
-                    'contents' => [
-                        ['parts' => [['text' => $prompt]]],
-                    ],
-                    'generationConfig' => [
-                        'temperature' => 0.4,
-                        'maxOutputTokens' => 700,
-                    ],
-                ]);
-        } catch (Throwable $e) {
-            Log::warning('AIDeskripsiTempat: Gemini tidak terjangkau — '.$e->getMessage());
-
-            return null;
-        }
-
-        if (! $response->successful()) {
-            Log::warning('AIDeskripsiTempat: Gemini HTTP '.$response->status().' untuk "'.$tempat->nama.'".');
-
-            return null;
-        }
-
-        $teks = $response->json('candidates.0.content.parts.0.text');
-
-        if (! is_string($teks)) {
-            return null;
-        }
-
-        $teks = trim($teks);
-
-        return $teks === '' ? null : $teks;
+        return app(GeminiClient::class)->teks($prompt, [
+            'temperature' => 0.4,
+            'maxOutputTokens' => 700,
+        ], 'deskripsi tempat "'.$tempat->nama.'"');
     }
 }

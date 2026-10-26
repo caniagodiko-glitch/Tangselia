@@ -15,13 +15,58 @@ return [
 
     'key' => env('GEMINI_API_KEY'),
 
-    'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
+    'model' => env('GEMINI_MODEL', 'gemini-3.1-flash-lite'),
 
     'endpoint' => 'https://generativelanguage.googleapis.com/v1beta/models/',
 
     'temperature' => 0.3,
 
     'max_output_tokens' => 300,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Anggaran Berpikir (Thinking Budget)
+    |--------------------------------------------------------------------------
+    |
+    | Model Gemini generasi terbaru "berpikir" sebelum menjawab. Untuk
+    | perangkuman dan ekstraksi JSON yang singkat, proses itu hanya
+    | memperlambat dan menghabiskan token. Nilai 0 mematikannya; naikkan
+    | bila hasil terasa kurang teliti.
+    |
+    */
+
+    'thinking_budget' => (int) env('GEMINI_THINKING_BUDGET', 0),
+
+    'timeout' => (int) env('GEMINI_TIMEOUT', 45),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Percobaan Ulang
+    |--------------------------------------------------------------------------
+    |
+    | Layanan Gemini kadang membalas 429/503 saat permintaan sedang padat.
+    | Permintaan diulang beberapa kali dengan jeda yang memanjang sebelum
+    | menyerah dan memakai fallback.
+    |
+    */
+
+    'coba_lagi' => (int) env('GEMINI_COBA_LAGI', 3),
+
+    'jeda_coba_lagi' => (int) env('GEMINI_JEDA_COBA_LAGI', 2000),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Jeda Antarpermintaan
+    |--------------------------------------------------------------------------
+    |
+    | Jumlah milidetik minimum antarpermintaan ke Gemini. Kuota gratis
+    | dibatasi per menit, sehingga puluhan permintaan beruntun memicu
+    | balasan 429/503. Nilai 2000 berarti paling banyak 30 permintaan
+    | per menit.
+    |
+    */
+
+    'jeda_antar_permintaan' => (int) env('GEMINI_JEDA_ANTAR_PERMINTAAN', 2000),
 
     /*
     |--------------------------------------------------------------------------

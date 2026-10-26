@@ -136,6 +136,11 @@ https://www.bing.com/news/search?q=%22lowongan+kerja%22+%22Tangerang+Selatan%22&
 https://www.bing.com/news/search?q=%22lowongan+kerja%22+BSD&format=rss
 https://www.bing.com/news/search?q=loker+%22Tangerang+Selatan%22&format=rss
 https://www.bing.com/news/search?q=informasi+lowongan+kerja+Tangerang+Selatan&format=rss
+https://www.bing.com/news/search?q=magang+%22Tangerang+Selatan%22&format=rss
+https://www.bing.com/news/search?q=%22lowongan+kerja%22+Bintaro&format=rss
+https://www.bing.com/news/search?q=%22lowongan+kerja%22+Serpong&format=rss
+https://www.bing.com/news/search?q=%22lowongan+kerja%22+Pamulang&format=rss
+https://www.bing.com/news/search?q=loker+Tangerang+Selatan&format=rss
 ```
 
 Kueri umum (Google News, tanpa `site:`):
@@ -146,7 +151,7 @@ https://news.google.com/rss/search?q=magang+%22Tangerang+Selatan%22&hl=id&gl=ID&
 https://news.google.com/rss/search?q=%28BSD+OR+Bintaro+OR+Serpong+OR+Pamulang%29+lowongan&hl=id&gl=ID&ceid=ID%3Aid
 ```
 
-Total **10 sumber lowongan** aktif di seeder.
+Total **15 sumber lowongan** aktif di seeder (9 Bing News + 6 Google News).
 
 ### 3.2 Kenapa Bing News tidak memakai `site:`
 
@@ -167,13 +172,24 @@ karena:
 1. tautan itu tetap mengarahkan pengguna ke artikel aslinya saat dibuka di browser;
 2. sumber Bing News tetap menyediakan tautan langsung untuk verifikasi silang.
 
-### 3.4 Pemisahan sumber berita vs lowongan
+Konsekuensi kedua yang lebih penting: `<description>` pada Google News RSS
+hanya berisi judul yang diulang ditambah nama penerbit, tanpa cuplikan isi.
+Halaman `news.google.com` juga tidak memuat teks artikel (diperiksa: hanya
+`meta description` generik). Karena itu AI untuk sumber Google News hanya
+mendapat bahan berupa judul, sehingga `posisi` dan `perusahaan` masih dapat
+diisi, tetapi `deskripsi`, `kualifikasi`, dan `cara_apply` sering kosong.
+Sumber Bing News tidak mengalami hal ini karena `<description>`-nya berisi
+ringkasan artikel yang sebenarnya. Pada pengambilan 26 Oktober 2026,
+seluruh baris dari Bing News memiliki deskripsi, sedangkan baris dari
+Google News sebagian besar tidak.
+
+### 3.5 Pemisahan sumber berita vs lowongan
 
 Kolom `sumber.tipe` membedakan dua kelompok sumber:
 
 - `berita` → 9 sumber (Google News ×2, Bing News, ANTARA Banten, TangerangNews,
   BantenNews, PosBanten, SinarBanten, ANTARA Nasional)
-- `lowongan` → 10 sumber (lihat §3.1)
+- `lowongan` → 15 sumber (lihat §3.1)
 
 Kedua tabel memakai service `FeedParser` yang sama, dan `LowonganFetcher`
 memfilter `where('tipe', 'lowongan')` agar tidak ada tumpang tindih.
@@ -567,7 +583,22 @@ Semua parameter modul ada di `config/lowongan.php`:
 | `kata_keterangan` | array | kata yang menandai potongan kalimat, bukan nama |
 | `domain_job_board` | array | domain yang dikenali sebagai job board |
 
-Kunci AI ada di `config/ai.php` (`config('ai.key')`).
+Kunci AI ada di `config/ai.php` (`config('ai.key')`). Pemanggilan Gemini
+dipusatkan di `App\Services\GeminiClient`, yang juga mengatur:
+
+| Kunci | Nilai bawaan | Arti |
+|---|---|---|
+| `model` | `gemini-3.1-flash-lite` | model yang dipakai (`GEMINI_MODEL`) |
+| `thinking_budget` | `0` | 0 mematikan mode "berpikir"; tanpa ini respons sering melewati batas waktu |
+| `timeout` | `45` | batas tunggu satu permintaan (detik) |
+| `coba_lagi` | `3` | jumlah percobaan saat 429/5xx atau koneksi putus |
+| `jeda_coba_lagi` | `2000` | jeda dasar antarpercobaan (milidetik), memanjang tiap kegagalan |
+| `jeda_antar_permintaan` | `2000` | jarak minimum antarpermintaan agar kuota per menit tidak jebol |
+
+`gemini-2.5-flash` sudah ditutup untuk pengguna baru (HTTP 404), dan
+`gemini-3.8-flash` sering membalas 503 saat permintaan padat. Model
+`gemini-3.1-flash-lite` dipilih karena stabil untuk perangkuman dan
+ekstraksi JSON.
 
 ---
 
@@ -587,7 +618,7 @@ php artisan lowongan:expire
 Keluarannya:
 
 ```
-Sumber: 9 | Lowongan baru: 77 | Lewat (duplikat/kosong): 214 | Sumber gagal: 0
+Sumber: 15 | Lowongan baru: 17 | Lewat (duplikat/kosong): 145 | Sumber gagal: 0
 ```
 
 Penjadwalan produksi (belum diaktifkan) memakai `Schedule::command('lowongan:fetch')->hourly()`
@@ -618,24 +649,24 @@ Pengujian tidak pernah memanggil Gemini API sungguhan — respons di-mock.
 ## 13. Data nyata saat ini
 
 ```
-lowongan          : 77   (67 tayang / 10 ditolak)
+lowongan          : 121  (34 tayang / 5 ditolak / 82 baru)
 kategori lowongan : 6
-sumber            : 19   (9 berita + 10 lowongan)
+sumber            : 24   (9 berita + 15 lowongan)
 ```
 
-Sebaran kategori setelah kurasi:
+Sebaran kategori pada lowongan berstatus `tayang`:
 
 | Kategori | Jumlah |
 |---|---|
-| Lainnya | 38 |
-| Administrasi dan Keuangan | 14 |
-| Pendidikan dan Kesehatan | 11 |
-| Penjualan dan Ritel | 8 |
-| Teknologi dan Informasi | 5 |
-| Kuliner dan Perhotelan | 1 |
+| Lainnya | 18 |
+| Pendidikan dan Kesehatan | 6 |
+| Administrasi dan Keuangan | 6 |
+| Teknologi dan Informasi | 2 |
+| Penjualan dan Ritel | 2 |
 
-10 lowongan yang ditolak memang benar-benar tidak relevan (judul berita umum,
-bukan lowongan).
+Sisanya berstatus `baru` karena menunggu kurasi admin. Dari 121 baris,
+52 memiliki `deskripsi` terisi dan 74 memiliki `posisi` terisi; hampir
+seluruh yang kosong berasal dari sumber Google News (lihat §3.4).
 
 ---
 
@@ -643,11 +674,12 @@ bukan lowongan).
 
 | Batasan | Dampak | Rencana |
 |---|---|---|
-| `GEMINI_API_KEY` kosong di `.env` | ekstraksi AI mati, `posisi`/`kualifikasi`/`cara_apply` sebagian besar `null` | isi key, jalankan ulang `lowongan:fetch` |
-| Tautan Google News tidak bisa di-resolve | `url_asli` untuk 3 sumber job board berupa redirect opaque | pertahankan; sumber Bing News menyediakan tautan langsung |
-| Feed Karir.com tidak menyebut posisi di judul | kolom `posisi` kosong untuk lowongan dari sumber itu | parser AI akan mengisinya setelah key tersedia |
-| Kategori "Lainnya" masih dominan (38/77) | peta kata kunci belum mencakup semua variasi | tambah kata kunci per kategori |
-| Tidak ada pagination di UI daftar berita | hanya 12 berita yang terjangkau | belum dikerjakan |
+| Cuplikan Google News hanya berisi judul | `deskripsi`/`kualifikasi`/`cara_apply` kosong untuk 6 sumber Google News | dijelaskan di §3.4; sumber Bing News dipakai untuk melengkapi |
+| Tautan Google News tidak bisa di-resolve | `url_asli` untuk 6 sumber Google News berupa redirect opaque | pertahankan; sumber Bing News menyediakan tautan langsung |
+| Feed Karir.com tidak menyebut posisi di judul | kolom `posisi` kosong untuk lowongan dari sumber itu | AI sudah diaktifkan; sebagian tetap kosong karena bahan hanya judul |
+| Kategori "Lainnya" masih dominan (18/34 tayang) | peta kata kunci belum mencakup semua variasi | tambah kata kunci per kategori |
+| 82 lowongan berstatus `baru` | belum tampil di situs | kurasi lewat panel admin |
+| `gemini-3.8-flash` sering 503 | tidak bisa dipakai sebagai model utama | gunakan `gemini-3.1-flash-lite` sampai kapasitas normal |
 
 **Gap yang belum dikerjakan:**
 

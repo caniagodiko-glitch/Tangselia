@@ -102,6 +102,36 @@ class SumberSeeder extends Seeder
                 'jenis' => 'rss',
                 'feed_url' => 'https://www.bing.com/news/search?q=informasi+lowongan+kerja+Tangerang+Selatan&format=rss',
             ],
+            [
+                'nama' => 'Bing News - Magang Tangerang Selatan',
+                'tipe' => 'lowongan',
+                'jenis' => 'rss',
+                'feed_url' => 'https://www.bing.com/news/search?q=magang+%22Tangerang+Selatan%22&format=rss',
+            ],
+            [
+                'nama' => 'Bing News - Lowongan Kerja Bintaro',
+                'tipe' => 'lowongan',
+                'jenis' => 'rss',
+                'feed_url' => 'https://www.bing.com/news/search?q=%22lowongan+kerja%22+Bintaro&format=rss',
+            ],
+            [
+                'nama' => 'Bing News - Lowongan Kerja Serpong',
+                'tipe' => 'lowongan',
+                'jenis' => 'rss',
+                'feed_url' => 'https://www.bing.com/news/search?q=%22lowongan+kerja%22+Serpong&format=rss',
+            ],
+            [
+                'nama' => 'Bing News - Lowongan Kerja Pamulang',
+                'tipe' => 'lowongan',
+                'jenis' => 'rss',
+                'feed_url' => 'https://www.bing.com/news/search?q=%22lowongan+kerja%22+Pamulang&format=rss',
+            ],
+            [
+                'nama' => 'Bing News - Loker Tangerang Selatan Terbaru',
+                'tipe' => 'lowongan',
+                'jenis' => 'rss',
+                'feed_url' => 'https://www.bing.com/news/search?q=loker+Tangerang+Selatan&format=rss',
+            ],
             // Sumber lowongan dari job board besar. Pencarian Google News
             // memakai operator site: untuk menjaring halaman lowongan dari job
             // board, dan judulnya memuat pola yang mudah dibaca seperti

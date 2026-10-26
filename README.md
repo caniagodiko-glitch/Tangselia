@@ -46,7 +46,7 @@ bukan hasil tebakan model bahasa.
 | Basis data | MySQL 8 (`utf8mb4`) |
 | Frontend | Next.js 16.3, React 19.2, TypeScript 5 |
 | Styling | Tailwind CSS 4 |
-| AI | Google Gemini (`gemini-2.5-flash`) — opsional, ada fallback |
+| AI | Google Gemini (`gemini-3.1-flash-lite`) — opsional, ada fallback |
 | Peta & tempat | OpenStreetMap (Overpass API), Google Places API |
 | Pengujian | PHPUnit 12, ESLint 9 |
 
@@ -96,7 +96,7 @@ DB_PASSWORD=
 
 # Opsional — tanpa ini fitur AI otomatis nonaktif, aplikasi tetap jalan
 GEMINI_API_KEY=
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.1-flash-lite
 
 # Opsional — tanpa ini rating & foto Google tidak muncul
 GOOGLE_MAPS_API_KEY=

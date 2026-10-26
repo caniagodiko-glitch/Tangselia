@@ -31,3 +31,9 @@ __pycache__/
 
 # Lock file Microsoft Word
 ~$*.docx
+~WRL*.tmp
+
+# Dokumen pribadi & karya orang lain — jangan ikut ter-commit tanpa sengaja
+/docs/KRS*.pdf
+/docs/Transkrip.pdf
+/docs/BAB 1 TUGAS AKHIR*

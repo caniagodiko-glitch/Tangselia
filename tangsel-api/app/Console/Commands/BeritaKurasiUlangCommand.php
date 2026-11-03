@@ -33,6 +33,7 @@ class BeritaKurasiUlangCommand extends Command
             BeritaWilayah::TERIMA => 0,
             BeritaWilayah::DRAFT => 0,
             BeritaWilayah::TOLAK => 0,
+            'kedaluwarsa' => 0,
             'berubah_status' => 0,
             'berubah_kecamatan' => 0,
         ];
@@ -43,8 +44,16 @@ class BeritaKurasiUlangCommand extends Command
                 foreach ($daftar as $berita) {
                     $hitung['total']++;
 
-                    $keputusan = $wilayah->keputusan($berita->judul, $berita->ringkasan, $berita->sumber);
+                    $kedaluwarsa = ! $hanyaKecamatan && $wilayah->terlaluTua($berita->published_at);
+                    $keputusan = $kedaluwarsa
+                        ? BeritaWilayah::TOLAK
+                        : $wilayah->keputusan($berita->judul, $berita->ringkasan, $berita->sumber);
+
                     $hitung[$keputusan]++;
+
+                    if ($kedaluwarsa) {
+                        $hitung['kedaluwarsa']++;
+                    }
 
                     $klasifikasi = $categorizer->categorize($berita->judul, $berita->ringkasan);
                     $perubahan = [];
@@ -85,6 +94,7 @@ class BeritaKurasiUlangCommand extends Command
                 ['Layak tayang', $hitung[BeritaWilayah::TERIMA]],
                 ['Disimpan sebagai draft', $hitung[BeritaWilayah::DRAFT]],
                 ['Diarsipkan', $hitung[BeritaWilayah::TOLAK]],
+                ['Termasuk kedaluwarsa', $hitung['kedaluwarsa']],
                 ['Status berubah', $hitung['berubah_status']],
                 ['Kecamatan berubah', $hitung['berubah_kecamatan']],
             ],

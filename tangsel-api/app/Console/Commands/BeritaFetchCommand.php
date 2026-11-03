@@ -19,10 +19,12 @@ class BeritaFetchCommand extends Command
         $stats = $fetcher->run($this->option('source'));
 
         $this->info(sprintf(
-            'Sumber: %d | Berita baru: %d | Lewat (duplikat/kosong): %d | Sumber gagal: %d',
+            'Sumber: %d | Berita baru: %d | Draft: %d | Lewat (duplikat/kosong): %d | Ditolak: %d | Sumber gagal: %d',
             $stats['sumber'],
             $stats['dibuat'],
+            $stats['draft'],
             $stats['dilewati'],
+            $stats['ditolak'],
             $stats['gagal'],
         ));
 

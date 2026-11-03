@@ -9,12 +9,27 @@ use App\Models\Sumber;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class BeritaAdminTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Carbon::setTestNow('2026-10-06 12:00:00');
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
 
     public function test_store_editorial_butuh_login_dan_role_admin(): void
     {
@@ -220,10 +235,10 @@ class BeritaAdminTest extends TestCase
             <channel>
             <title>ANTARA Banten</title>
             <item>
-              <title>Duabelas Judul Baru Dari Sumber Uji</title>
+              <title>Warga Tangsel Gotong Royong Bersihkan Kali</title>
               <link>https://banten.antaranews.com/berita/satu</link>
               <pubDate>Mon, 05 Oct 2026 08:00:00 +0700</pubDate>
-              <description>Ringkasan singkat berita dari feed.</description>
+              <description>Warga Tangerang Selatan bergotong royong membersihkan kali.</description>
             </item>
             </channel>
             </rss>

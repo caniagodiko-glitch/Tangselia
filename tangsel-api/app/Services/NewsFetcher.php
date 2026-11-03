@@ -29,17 +29,25 @@ class NewsFetcher
         private ArticleContentFetcher $contentFetcher,
         private AISummarizer $summarizer,
         private Categorizer $categorizer,
+        private BeritaWilayah $wilayah,
     ) {}
 
     /**
      * Mengambil seluruh sumber aktif (atau satu sumber), menyimpan item
      * baru sebagai berita agregat, lalu memperbarui statistik sumber.
      *
-     * @return array{sumber: int, dibuat: int, dilewati: int, gagal: int}
+     * @return array{sumber: int, dibuat: int, draft: int, dilewati: int, ditolak: int, gagal: int}
      */
     public function run(?string $source = null): array
     {
-        $stats = ['sumber' => 0, 'dibuat' => 0, 'dilewati' => 0, 'gagal' => 0];
+        $stats = [
+            'sumber' => 0,
+            'dibuat' => 0,
+            'draft' => 0,
+            'dilewati' => 0,
+            'ditolak' => 0,
+            'gagal' => 0,
+        ];
 
         $query = Sumber::query()->where('aktif', true)->where('tipe', 'berita');
 
@@ -56,7 +64,9 @@ class NewsFetcher
             try {
                 $hasil = $this->fetchFromSource($sumber);
                 $stats['dibuat'] += $hasil['dibuat'];
+                $stats['draft'] += $hasil['draft'];
                 $stats['dilewati'] += $hasil['dilewati'];
+                $stats['ditolak'] += $hasil['ditolak'];
 
                 $sumber->update([
                     'last_fetched_at' => now(),
@@ -80,9 +90,9 @@ class NewsFetcher
     }
 
     /**
-     * Proses satu sumber: unduh feed, dedup, perangkuman, kategorisasi.
+     * Proses satu sumber: unduh feed, dedup, saring wilayah, lalu simpan.
      *
-     * @return array{dibuat: int, dilewati: int, item_count: int}
+     * @return array{dibuat: int, draft: int, dilewati: int, ditolak: int, item_count: int}
      */
     private function fetchFromSource(Sumber $sumber): array
     {
@@ -96,7 +106,9 @@ class NewsFetcher
 
         $items = $this->feedParser->parse($response->body());
         $dibuat = 0;
+        $draft = 0;
         $dilewati = 0;
+        $ditolak = 0;
 
         foreach (array_slice($items, 0, self::MAX_ITEMS_PER_SOURCE) as $item) {
             $urlAsli = $item['link'];
@@ -115,20 +127,44 @@ class NewsFetcher
                 continue;
             }
 
-            if ($this->create($sumber, $item, $urlAsli) !== null) {
-                $dibuat++;
-            } else {
+            if ($this->wilayah->terlaluTua($item['pub_date'])) {
+                $ditolak++;
+
+                continue;
+            }
+
+            $keputusan = $this->wilayah->aktif()
+                ? $this->wilayah->keputusan($item['judul'], $item['ringkasan'] ?: null, $sumber->nama)
+                : BeritaWilayah::TERIMA;
+
+            if ($keputusan === BeritaWilayah::TOLAK) {
+                $ditolak++;
+
+                continue;
+            }
+
+            if ($this->create($sumber, $item, $urlAsli, $keputusan) === null) {
                 $dilewati++;
+            } elseif ($keputusan === BeritaWilayah::DRAFT) {
+                $draft++;
+            } else {
+                $dibuat++;
             }
         }
 
-        return ['dibuat' => $dibuat, 'dilewati' => $dilewati, 'item_count' => count($items)];
+        return [
+            'dibuat' => $dibuat,
+            'draft' => $draft,
+            'dilewati' => $dilewati,
+            'ditolak' => $ditolak,
+            'item_count' => count($items),
+        ];
     }
 
     /**
      * @param  array{judul: string, link: ?string, pub_date: ?Carbon, ringkasan: string, gambar: ?string, source_name: ?string, source_url: ?string}  $item
      */
-    private function create(Sumber $sumber, array $item, string $urlAsli): ?Berita
+    private function create(Sumber $sumber, array $item, string $urlAsli, string $keputusan): ?Berita
     {
         $ringkasan = $item['ringkasan'] !== '' ? $item['ringkasan'] : null;
         $diringkasOleh = 'feed';
@@ -147,10 +183,7 @@ class NewsFetcher
             }
         }
 
-        $teks = Str::lower($item['judul'].' '.($ringkasan ?? ''))
-            .($isiArtikel !== null ? ' '.Str::lower(Str::limit($isiArtikel, 800)) : '');
-
-        $kategori = $this->categorizer->categorize($teks);
+        $kategori = $this->categorizer->categorize($item['judul'], $ringkasan, $isiArtikel);
 
         try {
             return Berita::create([
@@ -167,7 +200,7 @@ class NewsFetcher
                 'sumber' => $item['source_name'] ?? $sumber->nama,
                 'sumber_url' => $item['source_url'] ?? $this->origin($sumber->feed_url),
                 'gambar' => $item['gambar'],
-                'status' => 'published',
+                'status' => $keputusan === BeritaWilayah::DRAFT ? 'draft' : 'published',
                 'published_at' => $item['pub_date'] ?? now(),
                 'fetched_at' => now(),
             ]);

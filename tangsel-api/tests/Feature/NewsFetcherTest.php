@@ -8,6 +8,7 @@ use App\Models\Kecamatan;
 use App\Models\Sumber;
 use App\Services\NewsFetcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -19,6 +20,8 @@ class NewsFetcherTest extends TestCase
     {
         parent::setUp();
 
+        Carbon::setTestNow('2026-10-06 12:00:00');
+
         config(['ai.key' => null]);
         Http::preventStrayRequests();
 
@@ -28,6 +31,13 @@ class NewsFetcherTest extends TestCase
             'slug' => 'berita-kota',
             'urutan' => 1,
         ]);
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
     }
 
     public function test_item_rss_baru_disimpan_dengan_ringkasan_feed(): void
@@ -41,7 +51,10 @@ class NewsFetcherTest extends TestCase
 
         $stats = app(NewsFetcher::class)->run();
 
-        $this->assertSame(['sumber' => 1, 'dibuat' => 1, 'dilewati' => 0, 'gagal' => 0], $stats);
+        $this->assertSame(
+            ['sumber' => 1, 'dibuat' => 1, 'draft' => 0, 'dilewati' => 0, 'ditolak' => 0, 'gagal' => 0],
+            $stats,
+        );
 
         $berita = Berita::sole();
 
@@ -226,6 +239,86 @@ class NewsFetcherTest extends TestCase
         $this->assertNull(Sumber::where('nama', 'Nonaktif')->sole()->last_status);
     }
 
+    public function test_berita_nasional_dari_sumber_umum_ditolak(): void
+    {
+        Sumber::factory()->create([
+            'nama' => 'ANTARA News Banten',
+            'feed_url' => 'https://banten.antaranews.com/rss/terkini.xml',
+        ]);
+
+        Http::fake(['*' => Http::response($this->rssDengan(
+            'Pemkab Serang usulkan 12 raperda',
+            'https://banten.antaranews.com/berita/serang-raperda',
+            'Mon, 05 Oct 2026 08:00:00 +0700',
+            'Pemerintah Kabupaten Serang mengusulkan dua belas raperda.',
+        ))]);
+
+        $stats = app(NewsFetcher::class)->run();
+
+        $this->assertSame(0, $stats['dibuat']);
+        $this->assertSame(1, $stats['ditolak']);
+        $this->assertSame(0, Berita::count());
+    }
+
+    public function test_berita_tanpa_penanda_wilayah_disimpan_sebagai_draft(): void
+    {
+        Sumber::factory()->create([
+            'nama' => 'PosBanten',
+            'feed_url' => 'https://posbanten.example/rss',
+        ]);
+
+        Http::fake(['*' => Http::response($this->rssDengan(
+            'Rapat koordinasi tingkat provinsi digelar',
+            'https://posbanten.example/rapat-koordinasi',
+            'Mon, 05 Oct 2026 08:00:00 +0700',
+        ))]);
+
+        $stats = app(NewsFetcher::class)->run();
+
+        $this->assertSame(1, $stats['draft']);
+        $this->assertSame('draft', Berita::sole()->status);
+    }
+
+    public function test_berita_terlalu_tua_ditolak(): void
+    {
+        Sumber::factory()->create([
+            'nama' => 'ANTARA News Banten',
+            'feed_url' => 'https://banten.antaranews.com/rss/terkini.xml',
+        ]);
+
+        Http::fake(['*' => Http::response($this->rssDengan(
+            'Warga Tangsel kerja bakti bersihkan saluran',
+            'https://banten.antaranews.com/berita/lama',
+            'Tue, 07 May 2024 09:00:00 +0700',
+        ))]);
+
+        $stats = app(NewsFetcher::class)->run();
+
+        $this->assertSame(1, $stats['ditolak']);
+        $this->assertSame(0, Berita::count());
+    }
+
+    public function test_kecamatan_paling_spesifik_dipilih(): void
+    {
+        Kecamatan::factory()->create(['nama' => 'Ciputat', 'slug' => 'ciputat']);
+        $timur = Kecamatan::factory()->create(['nama' => 'Ciputat Timur', 'slug' => 'ciputat-timur']);
+
+        Sumber::factory()->create([
+            'nama' => 'ANTARA News Banten',
+            'feed_url' => 'https://banten.antaranews.com/rss/terkini.xml',
+        ]);
+
+        Http::fake(['*' => Http::response($this->rssDengan(
+            'Warga Ciputat Timur keluhkan lampu jalan mati',
+            'https://banten.antaranews.com/berita/ciputat-timur',
+            'Mon, 05 Oct 2026 08:00:00 +0700',
+        ))]);
+
+        app(NewsFetcher::class)->run();
+
+        $this->assertSame($timur->id, Berita::sole()->kecamatan_id);
+    }
+
     private function rssFixture(): string
     {
         return <<<'XML'
@@ -258,6 +351,24 @@ class NewsFetcherTest extends TestCase
               <pubDate>Mon, 05 Oct 2026 09:00:00 +0700</pubDate>
               <description>Tim Serpong merekrut pemain baru untuk musim depan.</description>
               <source url="https://rm.id">RMID</source>
+            </item>
+            </channel>
+            </rss>
+            XML;
+    }
+
+    private function rssDengan(string $judul, string $link, string $pubDate, string $ringkasan = ''): string
+    {
+        return <<<XML
+            <?xml version="1.0" encoding="UTF-8"?>
+            <rss version="2.0">
+            <channel>
+            <title>Uji</title>
+            <item>
+              <title>{$judul}</title>
+              <link>{$link}</link>
+              <pubDate>{$pubDate}</pubDate>
+              <description><![CDATA[{$ringkasan}]]></description>
             </item>
             </channel>
             </rss>

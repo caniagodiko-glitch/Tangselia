@@ -38,6 +38,7 @@ class SumberFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'nama' => fake()->unique()->company().' Loker',
             'tipe' => 'lowongan',
+            'jenis' => 'rss',
         ]);
     }
 }

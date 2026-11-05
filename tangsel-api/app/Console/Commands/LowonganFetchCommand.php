@@ -8,7 +8,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('lowongan:fetch {--source= : Nama atau id sumber tertentu saja}')]
-#[Description('Mengambil lowongan kerja dari sumber RSS aktif lalu mengekstrak datanya')]
+#[Description('Mengambil lowongan kerja dari sumber RSS dan scraping aktif lalu mengekstrak datanya')]
 class LowonganFetchCommand extends Command
 {
     /**

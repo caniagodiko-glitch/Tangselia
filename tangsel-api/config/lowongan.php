@@ -281,4 +281,45 @@ return [
         'indeed.com', 'jobs.co.id', 'loker.id', 'jobsdb',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Scraping Sumber tanpa RSS
+    |--------------------------------------------------------------------------
+    |
+    | Sebagian job board tidak menyediakan RSS. Scraper Glints tetap tersedia
+    | sebagai opsi, tetapi dinonaktifkan secara bawaan karena halaman Glints
+    | dilindungi Cloudflare challenge yang menolak klien HTTP PHP. Sumber
+    | Glints di produksi tetap berjalan lewat Google News RSS pada seeder.
+    |
+    | Bila suatu saat scraping diaktifkan, halaman lokasi dipakai karena
+    | merupakan halaman publik yang diizinkan robots.txt dan sudah dibatasi
+    | pada Tangerang Selatan, bukan halaman explore yang dilarang. Data
+    | diambil dari JSON __NEXT_DATA__ milik halaman sehingga tidak bergantung
+    | pada kelas CSS yang mudah berubah.
+    |
+    */
+
+    'scraping' => [
+        'glints' => [
+            'aktif' => (bool) env('LOWONGAN_GLINTS_AKTIF', false),
+            'listing_url' => env(
+                'LOWONGAN_GLINTS_URL',
+                'https://glints.com/id/job-location/indonesia/banten/tangerang-selatan'
+            ),
+            'base_url' => 'https://glints.com',
+            'sumber' => 'Glints',
+            'sumber_url' => 'https://glints.com',
+            'user_agent' => 'TANGSEL-LIA-Bot/1.0 (+https://tangselia.id)',
+            'timeout' => 20,
+            'maks_item' => 20,
+            'jeda_ms' => 1000,
+            'ambil_detail' => true,
+            'panjang_deskripsi' => 1200,
+            'kecamatan' => [
+                'ciputat', 'ciputat timur', 'pamulang', 'pondok aren',
+                'serpong', 'serpong utara', 'setu',
+            ],
+        ],
+    ],
+
 ];

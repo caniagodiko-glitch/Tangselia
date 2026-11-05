@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Kecamatan;
 use App\Models\Lowongan;
 use App\Models\Sumber;
 use Illuminate\Support\Facades\Http;
@@ -11,12 +12,14 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Pengambil lowongan kerja dari sumber RSS lowongan.
+ * Pengambil lowongan kerja dari sumber RSS dan sumber scraping.
  *
  * Alurnya sama dengan NewsFetcher: unduh feed, dedup berdasarkan URL
  * artikel asli, ambil isi artikel setelah memeriksa robots.txt, ekstrak
- * data terstruktur, lalu klasifikasikan. Bedanya, hasil lowongan disimpan
- * dengan status "baru" dan menunggu kurasi administrator sebelum tayang.
+ * data terstruktur, lalu klasifikasikan. Sumber tanpa RSS seperti Glints
+ * dibaca melalui scraper khusus yang sudah mengembalikan data terstruktur,
+ * sehingga tidak perlu ekstraksi AI. Hasil lowongan disimpan dengan status
+ * "baru" dan menunggu kurasi administrator sebelum tayang.
  */
 class LowonganFetcher
 {
@@ -31,6 +34,7 @@ class LowonganFetcher
         private AIEkstraksiLowongan $ekstraktor,
         private LowonganClassifier $classifier,
         private LowonganWilayah $wilayah,
+        private LowonganScraper $scraper,
     ) {}
 
     /**
@@ -81,12 +85,17 @@ class LowonganFetcher
     }
 
     /**
-     * Proses satu sumber: unduh feed, dedup, ekstrak, klasifikasikan.
+     * Proses satu sumber: unduh feed atau halaman publik, dedup, ekstrak,
+     * lalu klasifikasikan.
      *
      * @return array{dibuat: int, dilewati: int, item_count: int}
      */
     private function fetchFromSource(Sumber $sumber): array
     {
+        if ($sumber->jenis === 'scraping') {
+            return $this->fetchFromScraper($sumber);
+        }
+
         $response = Http::withHeaders(['User-Agent' => self::USER_AGENT])
             ->timeout(15)
             ->get($sumber->feed_url);
@@ -134,6 +143,166 @@ class LowonganFetcher
         }
 
         return ['dibuat' => $dibuat, 'dilewati' => $dilewati, 'item_count' => count($items)];
+    }
+
+    /**
+     * Proses sumber scraping yang sudah mengembalikan data terstruktur.
+     *
+     * @return array{dibuat: int, dilewati: int, item_count: int}
+     */
+    private function fetchFromScraper(Sumber $sumber): array
+    {
+        $hasil = $this->scraper->fetch($sumber);
+        $dibuat = 0;
+        $dilewati = (int) ($hasil['dilewati'] ?? 0);
+
+        foreach ($hasil['items'] as $item) {
+            $urlAsli = mb_substr(trim((string) ($item['url'] ?? '')), 0, 500);
+            $judul = trim((string) ($item['judul'] ?? ''));
+
+            if ($urlAsli === '' || $judul === '') {
+                $dilewati++;
+
+                continue;
+            }
+
+            if (Lowongan::where('url_asli', $urlAsli)->exists()) {
+                $dilewati++;
+
+                continue;
+            }
+
+            $judulHash = $this->hashJudul($judul);
+
+            if ($judulHash !== '' && Lowongan::where('judul_hash', $judulHash)->exists()) {
+                $dilewati++;
+
+                continue;
+            }
+
+            if ($this->createFromScraped($sumber, $item, $urlAsli, $judulHash) !== null) {
+                $dibuat++;
+            } else {
+                $dilewati++;
+            }
+        }
+
+        return [
+            'dibuat' => $dibuat,
+            'dilewati' => $dilewati,
+            'item_count' => (int) ($hasil['item_count'] ?? count($hasil['items'])),
+        ];
+    }
+
+    /**
+     * Simpan satu lowongan hasil scraping tanpa ekstraksi AI.
+     *
+     * Data judul, perusahaan, lokasi, dan URL berasal langsung dari halaman
+     * sumber sehingga akurasinya tinggi. Deskripsi dan kualifikasi diambil
+     * dari field terstruktur Glints.
+     *
+     * @param  array<string, mixed>  $item
+     */
+    private function createFromScraped(Sumber $sumber, array $item, string $urlAsli, string $judulHash): ?Lowongan
+    {
+        $judul = mb_substr(trim((string) ($item['judul'] ?? '')), 0, 255);
+
+        if ($judul === '') {
+            return null;
+        }
+
+        $perusahaan = $item['perusahaan'] ?? null;
+        $perusahaan = is_string($perusahaan) ? trim($perusahaan) : null;
+        $perusahaan = $perusahaan === null || $perusahaan === '' ? null : mb_substr($perusahaan, 0, 255);
+
+        $deskripsi = $this->teksMultibaris($item['deskripsi'] ?? null, 1600);
+        $kualifikasi = $this->teksMultibaris($item['kualifikasi'] ?? null, 800);
+        $caraApply = $this->teksMultibaris($item['cara_apply'] ?? null, 500);
+
+        $teks = $judul.' '.($perusahaan ?? '').' '.($item['lokasi'] ?? '').' '
+            .($item['kecamatan'] ?? '').' '.($deskripsi ?? '');
+        $klasifikasi = $this->classifier->classify($teks);
+
+        $kecamatanId = $this->kecamatanId($item['kecamatan'] ?? null) ?? $klasifikasi['kecamatan_id'];
+        $jenis = in_array($item['jenis'] ?? null, ['magang', 'karir', 'part-time'], true)
+            ? $item['jenis']
+            : $klasifikasi['jenis'];
+
+        $teksWilayah = trim((string) ($item['lokasi'] ?? '').' '.($deskripsi ?? ''));
+
+        try {
+            return Lowongan::create([
+                'sumber_id' => $sumber->id,
+                'kategori_id' => $klasifikasi['kategori_id'],
+                'kecamatan_id' => $kecamatanId,
+                'kode' => $this->uniqueKode(),
+                'judul' => $judul,
+                'slug' => $this->uniqueSlug($judul, $urlAsli),
+                'judul_hash' => $judulHash,
+                'posisi' => $judul,
+                'perusahaan' => $perusahaan,
+                'jenis' => $jenis,
+                'deskripsi' => $deskripsi,
+                'kualifikasi' => $kualifikasi,
+                'cara_apply' => $caraApply,
+                'url_asli' => $urlAsli,
+                'sumber' => (string) ($item['sumber'] ?? $sumber->nama),
+                'sumber_url' => (string) ($item['sumber_url'] ?? $this->origin($sumber->feed_url)),
+                'status' => 'baru',
+                'relevan' => $this->relevan($judul, $teksWilayah === '' ? null : $teksWilayah, $sumber),
+                'catatan_admin' => null,
+                'tayang_at' => null,
+                'kedaluwarsa_at' => null,
+                'published_at' => $item['published_at'] ?? now(),
+                'fetched_at' => now(),
+            ]);
+        } catch (Throwable $e) {
+            Log::warning('lowongan:fetch gagal menyimpan hasil scraping "'.$judul.'": '.$e->getMessage());
+
+            return null;
+        }
+    }
+
+    /**
+     * Cocokkan nama kecamatan Glints dengan tabel kecamatan.
+     *
+     * Pencocokan eksak dipakai lebih dulu supaya "Serpong Utara" tidak
+     * tertukar dengan "Serpong" seperti pada pencocokan berbasis substring.
+     */
+    private function kecamatanId(mixed $nama): ?int
+    {
+        if (! is_string($nama) || trim($nama) === '') {
+            return null;
+        }
+
+        return Kecamatan::query()
+            ->whereRaw('LOWER(nama) = ?', [mb_strtolower(trim($nama))])
+            ->value('id');
+    }
+
+    /**
+     * Rapikan teks multi-baris hasil scraping tanpa menghapus barisnya.
+     */
+    private function teksMultibaris(?string $teks, int $maks): ?string
+    {
+        if ($teks === null || trim($teks) === '') {
+            return null;
+        }
+
+        $baris = preg_split('/\R/u', strip_tags($teks)) ?: [];
+        $bersih = [];
+
+        foreach ($baris as $satu) {
+            $satu = trim((string) preg_replace('/[ \t]+/u', ' ', $satu));
+
+            if ($satu !== '') {
+                $bersih[] = $satu;
+            }
+        }
+
+        $hasil = mb_substr(implode("\n", $bersih), 0, $maks);
+
+        return trim($hasil) === '' ? null : trim($hasil);
     }
 
     /**

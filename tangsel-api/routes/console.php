@@ -9,5 +9,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('berita:fetch')->hourly();
+Schedule::command('lowongan:fetch')->everyThreeHours();
+Schedule::command('lowongan:expire')->dailyAt('01:00');
 Schedule::command('info:fetch')->weeklyOn(1, '02:00');
 Schedule::command('wiki:sync')->monthlyOn(1, '03:00');

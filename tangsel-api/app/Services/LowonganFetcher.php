@@ -16,10 +16,11 @@ use Throwable;
  *
  * Alurnya sama dengan NewsFetcher: unduh feed, dedup berdasarkan URL
  * artikel asli, ambil isi artikel setelah memeriksa robots.txt, ekstrak
- * data terstruktur, lalu klasifikasikan. Sumber tanpa RSS seperti Glints
- * dibaca melalui scraper khusus yang sudah mengembalikan data terstruktur,
- * sehingga tidak perlu ekstraksi AI. Hasil lowongan disimpan dengan status
- * "baru" dan menunggu kurasi administrator sebelum tayang.
+ * data terstruktur, lalu klasifikasikan. Sumber tanpa RSS seperti
+ * Kitalulus dan Dealls dibaca melalui scraper JSON-LD yang sudah
+ * mengembalikan data terstruktur, sehingga tidak perlu ekstraksi AI.
+ * Hasil lowongan disimpan dengan status "baru" dan menunggu kurasi
+ * administrator sebelum tayang.
  */
 class LowonganFetcher
 {
@@ -215,7 +216,10 @@ class LowonganFetcher
         $perusahaan = is_string($perusahaan) ? trim($perusahaan) : null;
         $perusahaan = $perusahaan === null || $perusahaan === '' ? null : mb_substr($perusahaan, 0, 255);
 
-        $deskripsi = $this->teksMultibaris($item['deskripsi'] ?? null, 1600);
+        $deskripsi = $this->teksMultibaris(
+            $item['deskripsi'] ?? null,
+            (int) config('lowongan.panjang_deskripsi_scraping', 4000)
+        );
         $kualifikasi = $this->teksMultibaris($item['kualifikasi'] ?? null, 800);
         $caraApply = $this->teksMultibaris($item['cara_apply'] ?? null, 500);
 
@@ -252,7 +256,7 @@ class LowonganFetcher
                 'relevan' => $this->relevan($judul, $teksWilayah === '' ? null : $teksWilayah, $sumber),
                 'catatan_admin' => null,
                 'tayang_at' => null,
-                'kedaluwarsa_at' => null,
+                'kedaluwarsa_at' => $item['kedaluwarsa_at'] ?? null,
                 'published_at' => $item['published_at'] ?? now(),
                 'fetched_at' => now(),
             ]);

@@ -69,6 +69,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Panjang Deskripsi Hasil Scraping
+    |--------------------------------------------------------------------------
+    |
+    | Lowongan dari job board menyimpan deskripsi asli dari JSON-LD. Batas
+    | ini lebih longgar daripada ringkasan berita supaya kualifikasi dan
+    | informasi penting tidak terpotong terlalu cepat.
+    |
+    */
+
+    'panjang_deskripsi_scraping' => 4000,
+
+    /*
+    |--------------------------------------------------------------------------
     | Prompt Ekstraksi Lowongan
     |--------------------------------------------------------------------------
     |
@@ -279,6 +292,7 @@ return [
     'domain_job_board' => [
         'linkedin.com/jobs', 'glints.com', 'karir.com', 'jobstreet',
         'indeed.com', 'jobs.co.id', 'loker.id', 'jobsdb',
+        'kitalulus.com', 'dealls.com',
     ],
 
     /*
@@ -286,16 +300,15 @@ return [
     | Scraping Sumber tanpa RSS
     |--------------------------------------------------------------------------
     |
-    | Sebagian job board tidak menyediakan RSS. Scraper Glints tetap tersedia
-    | sebagai opsi, tetapi dinonaktifkan secara bawaan karena halaman Glints
-    | dilindungi Cloudflare challenge yang menolak klien HTTP PHP. Sumber
-    | Glints di produksi tetap berjalan lewat Google News RSS pada seeder.
+    | Sebagian job board tidak menyediakan RSS. Glints dinonaktifkan karena
+    | halaman Glints dilindungi Cloudflare challenge yang menolak klien HTTP
+    | PHP. Kitalulus dan Dealls dapat dibaca langsung karena halaman detailnya
+    | menyertakan JSON-LD JobPosting.
     |
-    | Bila suatu saat scraping diaktifkan, halaman lokasi dipakai karena
-    | merupakan halaman publik yang diizinkan robots.txt dan sudah dibatasi
-    | pada Tangerang Selatan, bukan halaman explore yang dilarang. Data
-    | diambil dari JSON __NEXT_DATA__ milik halaman sehingga tidak bergantung
-    | pada kelas CSS yang mudah berubah.
+    | Halaman lokasi dan sitemap dipakai karena keduanya halaman publik yang
+    | diizinkan robots.txt dan sudah dibatasi pada Tangerang Selatan. Data
+    | diambil dari JSON-LD sehingga tidak bergantung pada kelas CSS yang mudah
+    | berubah.
     |
     */
 
@@ -319,6 +332,34 @@ return [
                 'ciputat', 'ciputat timur', 'pamulang', 'pondok aren',
                 'serpong', 'serpong utara', 'setu',
             ],
+        ],
+        'kitalulus' => [
+            'aktif' => (bool) env('LOWONGAN_KITALULUS_AKTIF', true),
+            'listing_url' => env(
+                'LOWONGAN_KITALULUS_URL',
+                'https://www.kitalulus.com/lowongan/in-kota-tangerang-selatan'
+            ),
+            'base_url' => 'https://www.kitalulus.com',
+            'sumber' => 'Kitalulus',
+            'sumber_url' => 'https://www.kitalulus.com',
+            'user_agent' => 'TANGSEL-LIA-Bot/1.0 (+https://tangselia.id)',
+            'timeout' => 25,
+            'maks_item' => 30,
+            'jeda_ms' => 800,
+        ],
+        'dealls' => [
+            'aktif' => (bool) env('LOWONGAN_DEALLS_AKTIF', true),
+            'sitemap_url' => env(
+                'LOWONGAN_DEALLS_SITEMAP',
+                'https://dealls.com/sitemap-dynamic.xml'
+            ),
+            'base_url' => 'https://dealls.com',
+            'sumber' => 'Dealls',
+            'sumber_url' => 'https://dealls.com',
+            'user_agent' => 'TANGSEL-LIA-Bot/1.0 (+https://tangselia.id)',
+            'timeout' => 30,
+            'maks_item' => 40,
+            'jeda_ms' => 800,
         ],
     ],
 

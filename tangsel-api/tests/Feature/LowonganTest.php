@@ -35,6 +35,28 @@ class LowonganTest extends TestCase
         $this->getJson('/api/lowongan')->assertOk()->assertJsonCount(0, 'data');
     }
 
+    public function test_lowongan_dengan_link_redirect_agregator_tidak_ditampilkan(): void
+    {
+        Lowongan::factory()->tayang()->create([
+            'judul' => 'Lowongan link Google News',
+            'url_asli' => 'https://news.google.com/rss/articles/abc123',
+        ]);
+
+        Lowongan::factory()->tayang()->create([
+            'judul' => 'Lowongan link Bing News',
+            'url_asli' => 'https://www.bing.com/news/apiclick.aspx?url=https%3A%2F%2Fcontoh.test',
+        ]);
+
+        Lowongan::factory()->tayang()->create([
+            'judul' => 'Lowongan link langsung',
+            'url_asli' => 'https://contoh.test/lowongan/backend-developer',
+        ]);
+
+        $response = $this->getJson('/api/lowongan')->assertOk();
+
+        $this->assertSame(['Lowongan link langsung'], array_column($response->json('data'), 'judul'));
+    }
+
     public function test_daftar_lowongan_dapat_difilter_jenis_kategori_dan_kecamatan(): void
     {
         $kategori = Kategori::factory()->lowongan()->create(['nama' => 'Teknologi dan Informasi']);

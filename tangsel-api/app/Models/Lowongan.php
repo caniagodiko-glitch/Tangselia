@@ -76,7 +76,9 @@ class Lowongan extends Model
     }
 
     /**
-     * Lowongan yang sudah tayang dan belum kedaluwarsa.
+     * Lowongan yang sudah tayang, belum kedaluwarsa, dan punya URL asli
+     * langsung. Tautan redirect agregator disembunyikan karena pengguna
+     * harus diarahkan ke halaman lowongan asli, bukan ke perantara.
      *
      * @param  Builder<Lowongan>  $query
      * @return Builder<Lowongan>
@@ -84,6 +86,9 @@ class Lowongan extends Model
     public function scopeTayang(Builder $query): Builder
     {
         return $query->where('status', 'tayang')
+            ->whereNotNull('url_asli')
+            ->where('url_asli', 'not like', '%news.google.com%')
+            ->where('url_asli', 'not like', '%bing.com/news/apiclick%')
             ->where(fn (Builder $inner) => $inner
                 ->whereNull('kedaluwarsa_at')
                 ->orWhere('kedaluwarsa_at', '>', now()));

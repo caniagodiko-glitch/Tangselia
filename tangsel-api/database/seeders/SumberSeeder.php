@@ -11,9 +11,9 @@ class SumberSeeder extends Seeder
      * Run the database seeds.
      *
      * Tabel sumber dipakai dua fitur: berita (tipe berita) dan lowongan
-     * kerja (tipe lowongan). Sumber berita lolos uji nyata sesuai catatan
-     * teknis; sumber lowongan memakai pencarian Google News RSS dengan
-     * operator site: karena feed RSS job board langsung membalas 403/404.
+     * kerja (tipe lowongan). Sumber berita memakai RSS. Sumber lowongan
+     * utama memakai scraper JSON-LD dari Kitalulus dan Dealls, sedangkan
+     * RSS berita lowongan tetap tersedia sebagai pelengkap.
      */
     public function run(): void
     {
@@ -132,26 +132,48 @@ class SumberSeeder extends Seeder
                 'jenis' => 'rss',
                 'feed_url' => 'https://www.bing.com/news/search?q=loker+Tangerang+Selatan&format=rss',
             ],
+            // Sumber lowongan dari job board yang menyediakan JSON-LD
+            // JobPosting. Kitalulus memakai halaman lokasi, sedangkan Dealls
+            // memakai sitemap dinamis yang sudah dibatasi pada Tangsel.
+            [
+                'nama' => 'Kitalulus - Lowongan Tangerang Selatan',
+                'tipe' => 'lowongan',
+                'jenis' => 'scraping',
+                'feed_url' => 'https://www.kitalulus.com/lowongan/in-kota-tangerang-selatan',
+            ],
+            [
+                'nama' => 'Dealls - Lowongan Tangerang Selatan',
+                'tipe' => 'lowongan',
+                'jenis' => 'scraping',
+                'feed_url' => 'https://dealls.com/sitemap-dynamic.xml',
+            ],
             // Sumber lowongan dari job board besar. Pencarian Google News
             // memakai operator site: untuk menjaring halaman lowongan dari job
             // board, dan judulnya memuat pola yang mudah dibaca seperti
             // "Perusahaan hiring Posisi".
+            //
+            // Ketiganya dinonaktifkan karena tautan Google News masih berupa
+            // redirect dan isinya bercampur dengan halaman profil perusahaan.
+            // Sumber lowongan utama sekarang berasal dari scraper JSON-LD.
             [
                 'nama' => 'Lowongan - LinkedIn Jobs (Tangerang Selatan)',
                 'tipe' => 'lowongan',
                 'jenis' => 'rss',
+                'aktif' => false,
                 'feed_url' => 'https://news.google.com/rss/search?q=site%3Alinkedin.com%2Fjobs+%22Tangerang+Selatan%22&hl=id&gl=ID&ceid=ID%3Aid',
             ],
             [
                 'nama' => 'Lowongan - Glints (Tangerang Selatan)',
                 'tipe' => 'lowongan',
                 'jenis' => 'rss',
+                'aktif' => false,
                 'feed_url' => 'https://news.google.com/rss/search?q=site%3Aglints.com+%22Tangerang+Selatan%22&hl=id&gl=ID&ceid=ID%3Aid',
             ],
             [
                 'nama' => 'Lowongan - Karir.com (Tangerang Selatan)',
                 'tipe' => 'lowongan',
                 'jenis' => 'rss',
+                'aktif' => false,
                 'feed_url' => 'https://news.google.com/rss/search?q=site%3Akarir.com+%22Tangerang+Selatan%22&hl=id&gl=ID&ceid=ID%3Aid',
             ],
             [

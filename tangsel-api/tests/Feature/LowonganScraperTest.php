@@ -61,8 +61,8 @@ class LowonganScraperTest extends TestCase
         );
         $this->assertSame('Glints', $lowongan->sumber);
         $this->assertSame('https://glints.com', $lowongan->sumber_url);
-        $this->assertSame('baru', $lowongan->status);
-        $this->assertNull($lowongan->tayang_at);
+        $this->assertSame('tayang', $lowongan->status);
+        $this->assertNotNull($lowongan->tayang_at);
         $this->assertSame($serpong->id, $lowongan->kecamatan_id);
         $this->assertSame($kategori->id, $lowongan->kategori_id);
         $this->assertSame('karir', $lowongan->jenis);

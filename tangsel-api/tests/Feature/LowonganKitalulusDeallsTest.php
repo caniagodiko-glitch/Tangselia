@@ -75,12 +75,41 @@ class LowonganKitalulusDeallsTest extends TestCase
         $this->assertSame($urlDetail, $lowongan->url_asli);
         $this->assertSame('Kitalulus', $lowongan->sumber);
         $this->assertSame('https://www.kitalulus.com', $lowongan->sumber_url);
-        $this->assertSame('baru', $lowongan->status);
+        $this->assertSame('tayang', $lowongan->status);
+        $this->assertNotNull($lowongan->tayang_at);
         $this->assertTrue($lowongan->relevan);
         $this->assertStringContainsString('Membangun API', (string) $lowongan->deskripsi);
         $this->assertStringContainsString('Gaji: Rp 5.000.000 – Rp 7.000.000 per bulan', (string) $lowongan->deskripsi);
         $this->assertNotNull($lowongan->published_at);
         $this->assertNotNull($lowongan->kedaluwarsa_at);
+    }
+
+    public function test_auto_tayang_scraping_dapat_dimatikan(): void
+    {
+        config(['lowongan.auto_tayang_scraping' => false]);
+
+        $this->sumberKitalulus();
+
+        Http::fake([
+            'https://www.kitalulus.com/robots.txt' => Http::response("User-agent: *\nDisallow: /auth/\n"),
+            'https://www.kitalulus.com/lowongan/in-kota-tangerang-selatan' => Http::response(
+                '<html><body><a href="/lowongan/detail/backend-developer-abc123">Backend Developer</a></body></html>'
+            ),
+            'https://www.kitalulus.com/lowongan/detail/*' => Http::response($this->halamanDetail([
+                'title' => 'Backend Developer',
+                'jobLocation' => [
+                    'address' => ['addressLocality' => 'Tangerang Selatan'],
+                ],
+                'datePosted' => now()->subDay()->toIso8601ZuluString(),
+            ])),
+        ]);
+
+        app(LowonganFetcher::class)->run();
+
+        $lowongan = Lowongan::sole();
+
+        $this->assertSame('baru', $lowongan->status);
+        $this->assertNull($lowongan->tayang_at);
     }
 
     public function test_kitalulus_menolak_lowongan_yang_berada_di_luar_tangsel(): void
@@ -150,7 +179,8 @@ class LowonganKitalulusDeallsTest extends TestCase
         $this->assertSame($urlTangsel, $lowongan->url_asli);
         $this->assertSame('Dealls', $lowongan->sumber);
         $this->assertSame('https://dealls.com', $lowongan->sumber_url);
-        $this->assertSame('baru', $lowongan->status);
+        $this->assertSame('tayang', $lowongan->status);
+        $this->assertNotNull($lowongan->tayang_at);
         $this->assertTrue($lowongan->relevan);
         $this->assertStringContainsString('Membangun API', (string) $lowongan->deskripsi);
         $this->assertNotNull($lowongan->published_at);

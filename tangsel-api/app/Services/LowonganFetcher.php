@@ -19,8 +19,9 @@ use Throwable;
  * data terstruktur, lalu klasifikasikan. Sumber tanpa RSS seperti
  * Kitalulus dan Dealls dibaca melalui scraper JSON-LD yang sudah
  * mengembalikan data terstruktur, sehingga tidak perlu ekstraksi AI.
- * Hasil lowongan disimpan dengan status "baru" dan menunggu kurasi
- * administrator sebelum tayang.
+ * Hasil RSS disimpan dengan status "baru" dan menunggu kurasi
+ * administrator, sedangkan hasil scraping yang relevan langsung tayang
+ * karena datanya terstruktur dan sudah dibatasi pada wilayah Tangsel.
  */
 class LowonganFetcher
 {
@@ -200,7 +201,8 @@ class LowonganFetcher
      *
      * Data judul, perusahaan, lokasi, dan URL berasal langsung dari halaman
      * sumber sehingga akurasinya tinggi. Deskripsi dan kualifikasi diambil
-     * dari field terstruktur Glints.
+     * dari field terstruktur JSON-LD. Lowongan yang relevan langsung
+     * ditayangkan bila config lowongan.auto_tayang_scraping aktif.
      *
      * @param  array<string, mixed>  $item
      */
@@ -233,6 +235,13 @@ class LowonganFetcher
             : $klasifikasi['jenis'];
 
         $teksWilayah = trim((string) ($item['lokasi'] ?? '').' '.($deskripsi ?? ''));
+        $relevan = $this->relevan($judul, $teksWilayah === '' ? null : $teksWilayah, $sumber);
+        $tayangOtomatis = $relevan && (bool) config('lowongan.auto_tayang_scraping', true);
+        $kedaluwarsaAt = $item['kedaluwarsa_at'] ?? null;
+
+        if ($tayangOtomatis && $kedaluwarsaAt === null) {
+            $kedaluwarsaAt = now()->addDays((int) config('lowongan.kedaluwarsa_hari', 30));
+        }
 
         try {
             return Lowongan::create([
@@ -252,11 +261,11 @@ class LowonganFetcher
                 'url_asli' => $urlAsli,
                 'sumber' => (string) ($item['sumber'] ?? $sumber->nama),
                 'sumber_url' => (string) ($item['sumber_url'] ?? $this->origin($sumber->feed_url)),
-                'status' => 'baru',
-                'relevan' => $this->relevan($judul, $teksWilayah === '' ? null : $teksWilayah, $sumber),
+                'status' => $tayangOtomatis ? 'tayang' : 'baru',
+                'relevan' => $relevan,
                 'catatan_admin' => null,
-                'tayang_at' => null,
-                'kedaluwarsa_at' => $item['kedaluwarsa_at'] ?? null,
+                'tayang_at' => $tayangOtomatis ? now() : null,
+                'kedaluwarsa_at' => $kedaluwarsaAt,
                 'published_at' => $item['published_at'] ?? now(),
                 'fetched_at' => now(),
             ]);

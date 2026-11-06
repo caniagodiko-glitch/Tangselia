@@ -82,6 +82,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Tayang Otomatis Hasil Scraping
+    |--------------------------------------------------------------------------
+    |
+    | Hasil scraping job board (Kitalulus, Dealls) sudah terstruktur dan
+    | dibatasi pada wilayah Tangerang Selatan, sehingga boleh langsung
+    | tayang tanpa kurasi. Sumber RSS tetap berstatus "baru" karena isinya
+    | berupa berita yang perlu diperiksa administrator. Setel
+    | LOWONGAN_AUTO_TAYANG=false untuk mengembalikan kurasi manual.
+    |
+    */
+
+    'auto_tayang_scraping' => (bool) env('LOWONGAN_AUTO_TAYANG', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Prompt Ekstraksi Lowongan
     |--------------------------------------------------------------------------
     |

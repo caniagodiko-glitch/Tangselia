@@ -19,7 +19,7 @@ class LowonganFetchCommand extends Command
         $stats = $fetcher->run($this->option('source'));
 
         $this->info(sprintf(
-            'Sumber: %d | Lowongan baru: %d | Lewat (duplikat/kosong): %d | Sumber gagal: %d',
+            'Sumber: %d | Lowongan tersimpan: %d | Lewat (duplikat/kosong): %d | Sumber gagal: %d',
             $stats['sumber'],
             $stats['dibuat'],
             $stats['dilewati'],
